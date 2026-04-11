@@ -12,9 +12,7 @@
 O projeto utiliza uma arquitetura de Monorepo. O Agente de IA deve respeitar a seguinte estrutura de pastas:
 
 * **`apps/api`**: Servidor Backend (NestJS). 
-* **`apps/web`**: Aplicação Client (Angular 17+). 
-* **`apps/extension`**: Vanilla TypeScript para manipulação de DOM.
-
+* **`apps/web`**: Aplicação Client (Nuxt 4). 
 
 ## 🤖 2. Orquestração e Ecossistema de Contexto (MCP)
 > **Instrução para a IA:** Este projeto utiliza o Model Context Protocol (MCP) para garantir a paridade entre especificação e execução. Sempre utilize as ferramentas abaixo antes de propor alterações estruturais.
@@ -29,9 +27,9 @@ O projeto utiliza uma arquitetura de Monorepo. O Agente de IA deve respeitar a s
 ### Core & Infraestrutura
 * **Ambiente:** Node.js v20.x LTS.
 * **Banco de Dados:** PostgreSQL 16 (Hospedado no Neon.tech).
-* **Backend:** NestJS v10.x.
-* **Frontend:** Nuxt v3.x.
-* **ORM:** Prisma v5.x (Interface oficial com o banco de dados).
+* **Backend:** NestJS v11.x.
+* **Frontend:** Nuxt v4.x.
+* **ORM:** Prisma v6.x (Interface oficial com o banco de dados).
 * **Testes:** `jest` e `supertest` (Obrigatório seguir o padrão oficial do NestJS para testes unitários e E2E. Proibido o uso de Vitest, Mocha ou qualquer outro test runner).
 
 ### Bibliotecas e Utilitários Permitidos
@@ -39,7 +37,6 @@ O projeto utiliza uma arquitetura de Monorepo. O Agente de IA deve respeitar a s
 * **Auth:** Passport.js + JWT (`@nestjs/jwt` e `@nestjs/passport`) para sessões seguras.
 * **Validação:** `class-validator` e `class-transformer` (Obrigatório para os Pipes globais de validação de DTOs).
 * **Documentação:** `@nestjs/swagger` (OpenAPI 3.0 para os contratos de API).
-* **Utilitários:** `date-fns` (Para a lógica rigorosa de expiração do QR Code em 15s).
 
 
 ## 🗄️ 4. Arquitetura de Dados
