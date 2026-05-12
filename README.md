@@ -1,8 +1,8 @@
 # 📍 La Resenha FC!
 
-🔗 **Link em Produção:** [Aguardando Deploy na Nuvem]
-🎨 **Design (Google Stitch):** [Acessar Projeto](https://stitch.withgoogle.com/projects/6193393013944718801)
-👨‍💻 **Autores:** Ronaldo P H Campos
+* 🔗 **Link em Produção:** [Aguardando Deploy na Nuvem]
+* 🎨 **Design (Google Stitch):** [Acessar Projeto](https://stitch.withgoogle.com/projects/6193393013944718801)
+* 👨‍💻 **Autores:** Ronaldo P H Campos
 
 ## 🎯 1. Visão Geral
 
