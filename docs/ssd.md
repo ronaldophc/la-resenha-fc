@@ -260,3 +260,23 @@ As seguintes variáveis são o contrato obrigatório para o arquivo `.env`:
 * `DATABASE_URL` = String de conexão do PostgreSQL (Neon.tech).
 * `JWT_SECRET` = Chave para assinar o token de sessão de usuário.
 * `JWT_EXPIRES_IN` = Tempo de expiração da sessão (ex: `8h`).
+
+## 🎨 10. Design Tokens (Estética e Identidade Visual)
+
+### 🎨 10.1. Paleta de Cores (Hexadecimal)
+* **Primary (Warning Yellow):** `#FACC15` - Usado para CTAs principais, números de camisa e destaques de status.
+* **Secondary (Deep Forest):** `#1a4314` - Cor de fundo para seções de destaque e identidade do clube.
+* **Background (Pitch Black):** `#131313` - Fundo principal para o visual "dark mode" rústico.
+* **Surface (Iron):** `#1c1b1b` - Usado em cards, inputs e tabelas para profundidade.
+* **Success (Court Green):** `#86efac` - Indicadores de vitórias e status ativos.
+
+### 🔤 10.2. Tipografia (Famílias de Fontes)
+* **Headings (Títulos):** `Oswald` (Sans-serif, Peso 700, Uppercase)
+  * *Racional:* Fonte condensada e impactante que remete a placares de ginásio e posters de várzea.
+* **Body / UI (Corpo e Interface):** `Manrope` ou `Inter` (Sans-serif, Pesos 400 a 600)
+  * *Racional:* Alta legibilidade para leitura de notícias e gestão de dados administrativos.
+
+### 📐 10.3. Estética e Geometria
+* **Arredondamento (Border Radius):** `4px` (Cantos levemente suavizados, mantendo a sobriedade).
+* **Sombras:** `4px 4px 0px rgba(0,0,0,1)` (Sombras sólidas brutalistas para dar peso aos elementos).
+
