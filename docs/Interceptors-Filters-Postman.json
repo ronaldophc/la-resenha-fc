@@ -1,0 +1,86 @@
+{
+  "info": {
+    "name": "Testes Interceptador e Filtro - La Resenha FC",
+    "description": "Testes para validar o Interceptador (Transform) e o Filtro de Exceções Globais.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Teste 1: O Caminho Feliz (Sucesso)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Interceptador aplicou formato padrão (success: true)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData).to.have.property(\"timestamp\");",
+              "    pm.expect(jsonData).to.have.property(\"data\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/players",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "players"
+          ]
+        },
+        "description": "Deve retornar a lista de jogadores embutida no objeto { success: true, timestamp: ..., data: [...] }"
+      },
+      "response": []
+    },
+    {
+      "name": "Teste 2: O Caminho de Falha (Erro Tratado)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Filtro Global retornou erro customizado (success: false)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(false);",
+              "    pm.expect(jsonData).to.have.property(\"path\");",
+              "    pm.expect(jsonData.path).to.include(\"/players/99\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/players/99",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "players",
+            "99"
+          ]
+        },
+        "description": "Tenta buscar um jogador que não existe. O filtro global deve capturar a exceção e retornar o JSON padronizado com success: false e o caminho acessado."
+      },
+      "response": []
+    }
+  ]
+}
