@@ -2,141 +2,119 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Player, PlayerPosition } from './interfaces/players.interface';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { PlayerNumberAlreadyInUseException } from './exceptions/player-number-already-in-use.exception';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PlayersService {
-  private players: Player[] = [
-    {
-      id: 1,
-      name: 'Carlos Silva',
-      number: 1,
-      position: PlayerPosition.GOALKEEPER,
-      photoUrl: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 2,
-      name: 'Marcos Oliveira',
-      number: 4,
-      position: PlayerPosition.DEFENDER,
-      photoUrl: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 3,
-      name: 'Felipe Santos',
-      number: 8,
-      position: PlayerPosition.MIDFIELDER,
-      photoUrl: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: 4,
-      name: 'Rafael Costa',
-      number: 9,
-      position: PlayerPosition.FORWARD,
-      photoUrl: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
 
-  private nextId = 5;
+  constructor(private prisma: PrismaService) {}
 
-  create(data: CreatePlayerDto): Player {
-    const numberExists = this.players.some((p) => p.number === data.number);
+  async create(data: CreatePlayerDto): Promise<Player> {
+    const numberExists = await this.prisma.player.findUnique({ where: { number: data.number } });
     if (numberExists) {
       throw new PlayerNumberAlreadyInUseException(data.number);
     }
 
-    const newPlayer: Player = {
-      id: this.nextId++,
-      name: data.name,
-      number: data.number,
-      position: data.position,
-      photoUrl: data.photoUrl ?? null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const newPlayer = await this.prisma.player.create({
+      data: {
+        name: data.name,
+        number: data.number,
+        position: data.position,
+        photoUrl: data.photoUrl ?? null,
+      },
+    });
 
-    this.players.push(newPlayer);
-    return newPlayer;
+    return newPlayer as Player;
   }
 
-  findAll(query?: any): Player[] {
-    let result = this.players;
-
+  async findAll(query?: any): Promise<Player[]> {
     if (query?.filter) {
-      const lowerFilter = query.filter.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(lowerFilter) ||
-          p.position.toLowerCase().includes(lowerFilter),
-      );
+      const filterStr = query.filter;
+      return this.prisma.player.findMany({
+        where: {
+          OR: [
+            { name: { contains: filterStr, mode: 'insensitive' } },
+            { position: { contains: filterStr, mode: 'insensitive' } },
+          ],
+        },
+      }) as Promise<Player[]>;
     }
 
-    return result;
+    return this.prisma.player.findMany() as Promise<Player[]>;
   }
 
-  findOne(id: number): Player {
-    const player = this.players.find((p) => p.id === id);
+  async findOne(id: number): Promise<Player> {
+    const player = await this.prisma.player.findUnique({
+      where: { id },
+    });
 
     if (!player) {
       throw new NotFoundException(`Jogador com id ${id} não encontrado.`);
     }
 
-    return player;
+    return player as Player;
   }
 
-  replace(id: number, data: CreatePlayerDto): Player {
-    const player = this.findOne(id);
+  async replace(id: number, data: CreatePlayerDto): Promise<Player> {
+    await this.findOne(id);
 
-    const numberExists = this.players.some((p) => p.number === data.number && p.id !== id);
+    const numberExists = await this.prisma.player.findFirst({
+      where: {
+        number: data.number,
+        id: { not: id },
+      },
+    });
     if (numberExists) {
       throw new PlayerNumberAlreadyInUseException(data.number);
     }
 
-    Object.assign(player, {
-      ...data,
-      photoUrl: data.photoUrl ?? null,
-      updatedAt: new Date(),
+    const updatedPlayer = await this.prisma.player.update({
+      where: { id },
+      data: {
+        name: data.name,
+        number: data.number,
+        position: data.position,
+        photoUrl: data.photoUrl ?? null,
+      },
     });
 
-    return player;
+    return updatedPlayer as Player;
   }
 
-  update(id: number, data: Partial<CreatePlayerDto>): Player {
-    const player = this.findOne(id);
+  async update(id: number, data: Partial<CreatePlayerDto>): Promise<Player> {
+    await this.findOne(id);
 
     if (data.number !== undefined) {
-      const numberExists = this.players.some((p) => p.number === data.number && p.id !== id);
+      const numberExists = await this.prisma.player.findFirst({
+        where: {
+          number: data.number,
+          id: { not: id },
+        },
+      });
       if (numberExists) {
         throw new PlayerNumberAlreadyInUseException(data.number);
       }
     }
 
-    const updateData = { ...data, updatedAt: new Date() };
-    if (data.photoUrl === undefined && !('photoUrl' in data)) {
-      // do nothing
-    } else {
-      (updateData as any).photoUrl = data.photoUrl ?? null;
-    }
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.number !== undefined) updateData.number = data.number;
+    if (data.position !== undefined) updateData.position = data.position;
+    if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl ?? null;
 
-    Object.assign(player, updateData);
+    const updatedPlayer = await this.prisma.player.update({
+      where: { id },
+      data: updateData,
+    });
 
-    return player;
+    return updatedPlayer as Player;
   }
 
-  remove(id: number): void {
-    const index = this.players.findIndex((p) => p.id === id);
+  async remove(id: number): Promise<void> {
+    await this.findOne(id);
 
-    if (index === -1) {
-      throw new NotFoundException(`Jogador com id ${id} não encontrado.`);
-    }
-
-    this.players.splice(index, 1);
+    await this.prisma.player.delete({
+      where: { id },
+    });
   }
 }
