@@ -8,9 +8,18 @@ import { NewsModule } from './news/news.module';
 import { StandingsModule } from './standings/standings.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggerMiddleware } from './logger/logger.middleware';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [AuthModule, PlayersModule, MatchesModule, NewsModule, StandingsModule, PrismaModule],
+  imports: [
+    AuthModule,
+    PlayersModule,
+    MatchesModule,
+    NewsModule,
+    StandingsModule,
+    PrismaModule,
+    UsersModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

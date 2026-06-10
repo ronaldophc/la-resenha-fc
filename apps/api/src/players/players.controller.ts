@@ -11,11 +11,15 @@ import {
   HttpStatus,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PlayersService } from './players.service';
 import * as playersInterface from './interfaces/players.interface';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { QueryFilterDto } from './dto/query-filter.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('players')
 export class PlayersController {
@@ -35,6 +39,8 @@ export class PlayersController {
 
   // POST /players — Retorna 201 com o objeto criado
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createPlayerDto: CreatePlayerDto) {
     return this.playersService.create(createPlayerDto);
@@ -42,6 +48,8 @@ export class PlayersController {
 
   // PUT /players/:id — Substitui completamente, retorna 404 se não encontrado
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   async replace(
     @Param('id', ParseIntPipe) id: number,
     @Body() replacePlayerDto: CreatePlayerDto,
@@ -51,6 +59,8 @@ export class PlayersController {
 
   // PATCH /players/:id — Atualiza parcialmente, retorna 404 se não encontrado
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePlayerDto: Partial<CreatePlayerDto>,
@@ -60,6 +70,8 @@ export class PlayersController {
 
   // DELETE /players/:id — Retorna 204 No Content ou 404 se não encontrado
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.playersService.remove(id);
