@@ -4,12 +4,17 @@ import { ValidationPipe } from '@nestjs/common';
 import { TransformInterceptor } from './transform/transform.interceptor';
 import { HttpExceptionFilter } from './http-exception/http-exception.filter';
 import { PlayerNumberAlreadyInUseFilter } from './players/filters/player-number-already-in-use.filter';
+import { EmailAlreadyInUseFilter } from './users/filters/email-already-in-use.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalInterceptors(new TransformInterceptor());
-  app.useGlobalFilters(new HttpExceptionFilter(), new PlayerNumberAlreadyInUseFilter());
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new PlayerNumberAlreadyInUseFilter(),
+    new EmailAlreadyInUseFilter(),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true, 
