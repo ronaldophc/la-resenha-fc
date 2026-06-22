@@ -14,7 +14,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PlayersService } from './players.service';
-import * as playersInterface from './interfaces/players.interface';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { QueryFilterDto } from './dto/query-filter.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
