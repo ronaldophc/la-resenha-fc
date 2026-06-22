@@ -67,9 +67,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @
-    @Get('profile')
-    async getProfile(@Req() request) {
-      return request.user;
-    }
+  @Get('profile')
+  async getProfile(@Req() request) {
+    return request.user;
+  }
 }
