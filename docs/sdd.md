@@ -1,9 +1,8 @@
-# 📐 Software Design Document (SDD) - Tô Aqui!
+# 📐 Software Design Document (SDD) - La Resenha FC
 
-**Projeto:** Tô Aqui! (AutoPresence UTFPR)  
+**Projeto:** La Resenha FC  
 **Versão:** 1.0.0  
-**Status:** 🟢 Pronto para Implementação  
-**Stack Principal:** NestJS, Angular, Prisma ORM, PostgreSQL.
+**Stack Principal:** NestJS, Nuxt, Prisma ORM, PostgreSQL.
 
 ---
 
