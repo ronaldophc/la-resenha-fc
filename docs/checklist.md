@@ -14,11 +14,11 @@
 ---
 
 ## ⚙️ RA2 - Desenvolvimento Backend Assistido por IA
-* [ ] **ID5:** O código NestJS mantém **separação estrita de camadas** arquiteturais (Controllers, Services, Modules).
-* [ ] **ID6:** Aplicou **DTOs** e `ValidationPipes` (com `whitelist`) para blindar as entradas da API.
-* [ ] **ID7:** Implementou operações **CRUD relacionais** utilizando Prisma ORM.
-* [ ] **ID8:** Configurou **autenticação JWT** e protegeu rotas através de controle de acesso (Roles/Guards).
-* [ ] **ID9:** Padronizou o tráfego com **Interceptors** para respostas e **Exception Filters** globais para erros.
+* [X] **ID5:** O código NestJS mantém **separação estrita de camadas** arquiteturais (Controllers, Services, Modules).
+* [X] **ID6:** Aplicou **DTOs** e `ValidationPipes` (com `whitelist`) para blindar as entradas da API.
+* [X] **ID7:** Implementou operações **CRUD relacionais** utilizando Prisma ORM.
+* [X] **ID8:** Configurou **autenticação JWT** e protegeu rotas através de controle de acesso (Roles/Guards).
+* [X] **ID9:** Padronizou o tráfego com **Interceptors** para respostas e **Exception Filters** globais para erros.
 
 ---
 
@@ -29,7 +29,7 @@
 ---
 
 ## 🎨 RA4 - Prototipagem e Integração Frontend
-* [ ] **ID12:** A API do backend expõe documentação **Swagger (OpenAPI)** atualizada e interativa.
+* [X] **ID12:** A API do backend expõe documentação **Swagger (OpenAPI)** atualizada e interativa.
 * [ ] **ID13:** Materializou o PRD em **interfaces visuais** (React/Angular/Vue) utilizando prototipagem assistida por IA.
 * [ ] **ID14:** A interface consome os dados reais da API NestJS de forma síncrona, lidando corretamente com os **tokens JWT**.
 

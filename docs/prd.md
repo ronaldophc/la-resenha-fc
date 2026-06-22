@@ -9,7 +9,7 @@
 
 ## 🎯 1. Visão Geral e Objetivo
 
-Times de futebol de várzea operam com gestão completamente dispersa: resultados são anunciados em grupos de WhatsApp, escalações são rabiscadas em papel e a única "vitrine" digital do time costuma ser um perfil no Instagram — sem histórico organizado, sem tabela de classificação e sem uma identidade online própria.
+Times de futebol de várzea operam com gestão completamente dispersa: resultados são anúncios em grupos de WhatsApp, escalações são rabiscadas em papel e a única "vitrine" digital do time costuma ser um perfil no Instagram — sem histórico organizado, sem tabela de classificação e sem uma identidade online própria.
 
 O **La Resenha FC** resolve isso com um sistema full-cycle que centraliza toda a informação do time em um único lugar, dando ao clube uma presença digital profissional sem depender de redes sociais de terceiros.
 
@@ -54,12 +54,12 @@ O sistema é composto por duas frentes:
 ## 📝 4. Escopo Funcional, Histórias de Usuário e Critérios de Aceitação (MoSCoW)
 
 ### 🔴 US01 - Documentação Técnica do Projeto (Must Have)
-**Ator:** Gestor do Projeto | **História:** Como gestor do projeto, quero ter o PRD e o SDD (com diagrama de banco de dados em Mermaid) versionados na pasta `/docs` do repositório, para que a equipe e os avaliadores tenham uma referência técnica única, rastreável e sempre atualizada.
+**Ator:** Gestor do Projeto | **História:** Como gestor do projeto, quero ter o PRD e o SDD (com diagrama de banco de dados em Mermaid) versionados na pasta `/docs` do repositório, para que a equipe e os avaliadores tenham uma referência técnica única, rastreável e sempre updated.
 
 **✅ Critérios de Aceitação:**
-- [ ] O arquivo `docs/prd.md` contém as personas, User Stories e critérios de aceitação do sistema.
-- [ ] O arquivo `docs/sdd.md` contém o diagrama de entidades do banco de dados em sintaxe Mermaid, os contratos dos principais endpoints da API (método, rota, request/response) e o fluxo de autenticação JWT.
-- [ ] Ambos os documentos são gerados e refinados com o auxílio de IA (Claude), com evidência no histórico de commits.
+- [X] O arquivo `docs/prd.md` contém as personas, User Stories e critérios de aceitação do sistema.
+- [X] O arquivo `docs/sdd.md` contém o diagrama de entidades do banco de dados em sintaxe Mermaid, os contratos dos principais endpoints da API (método, rota, request/response) e o fluxo de autenticação JWT.
+- [X] Ambos os documentos são gerados e refinados com o auxílio de IA (Claude), com evidência no histórico de commits.
 
 > **Requisitos técnicos cobertos:** `ID1`
 
@@ -69,9 +69,9 @@ O sistema é composto por duas frentes:
 **Ator:** Desenvolvedor | **História:** Como desenvolvedor, quero que o projeto seja organizado como um Monorepo no GitHub, com os diretórios `backend/` (NestJS) e `frontend/` (Nuxt) no mesmo repositório, para que eu gerencie o ciclo de vida completo da aplicação em um único lugar.
 
 **✅ Critérios de Aceitação:**
-- [ ] O repositório no GitHub contém, na raiz, os diretórios `backend/` e `frontend/`.
-- [ ] Cada diretório possui seu próprio `package.json` com scripts independentes (`start`, `test`, `build`).
-- [ ] O `README.md` raiz descreve a estrutura do monorepo e como executar cada parte localmente.
+- [X] O repositório no GitHub contém, na raiz, a estrutura de monorepo (diretórios `apps/api` e `apps/web`).
+- [X] Cada diretório possui seu próprio `package.json` com scripts independentes (`start`, `test`, `build`).
+- [X] O `README.md` raiz descreve a estrutura do monorepo e como executar cada parte localmente.
 
 > **Requisitos técnicos cobertos:** `ID2`
 
@@ -81,9 +81,9 @@ O sistema é composto por duas frentes:
 **Ator:** Gestor do Projeto | **História:** Como gestor do projeto, quero que cada User Story deste PRD seja registrada como uma Issue no GitHub e organizada no GitHub Projects (quadro Kanban), para que eu tenha visibilidade do progresso do desenvolvimento a qualquer momento.
 
 **✅ Critérios de Aceitação:**
-- [ ] Cada US deste PRD possui uma Issue correspondente no repositório, com título, descrição e critérios de aceitação.
-- [ ] As Issues estão vinculadas ao GitHub Projects em colunas: `Backlog`, `In Progress`, `In Review`, `Done`.
-- [ ] As Issues são fechadas automaticamente via `Closes #XX` nos Pull Requests que as implementam.
+- [X] Cada US deste PRD possui uma Issue correspondente no repositório, com título, descrição e critérios de aceitação.
+- [X] As Issues estão vinculadas ao GitHub Projects em colunas: `Backlog`, `In Progress`, `In Review`, `Done`.
+- [X] As Issues são fechadas automaticamente via `Closes #XX` nos Pull Requests que as implementam.
 
 > **Requisitos técnicos cobertos:** `ID3`
 
@@ -93,10 +93,10 @@ O sistema é composto por duas frentes:
 **Ator:** Desenvolvedor | **História:** Como desenvolvedor, quero utilizar o GitFlow com branches de feature isoladas e Pull Requests revisados para integrar código na branch principal, para que a branch `develop` seja sempre estável e todo código passe por revisão antes do merge.
 
 **✅ Critérios de Aceitação:**
-- [ ] O repositório possui branches protegidas: `main` (produção) e `develop` (integração).
-- [ ] Cada funcionalidade é desenvolvida em uma branch `feature/nome-da-feature` criada a partir de `develop`.
-- [ ] A integração em `develop` ocorre exclusivamente por Pull Request; merges diretos são bloqueados.
-- [ ] Cada PR referencia a Issue correspondente e tem seu histórico de commits limpo e descritivo.
+- [X] O repositório possui branches protegidas: `main` (produção) e `develop` (integração).
+- [X] Cada funcionalidade é desenvolvida em uma branch `feature/nome-da-feature` criada a partir de `develop`.
+- [X] A integração em `develop` ocorre exclusivamente por Pull Request; merges diretos são bloqueados.
+- [X] Cada PR referencia a Issue correspondente e tem seu histórico de commits limpo e descritivo.
 
 > **Requisitos técnicos cobertos:** `ID4`
 
@@ -106,12 +106,12 @@ O sistema é composto por duas frentes:
 **Ator:** Gestor | **História:** Como gestor, quero fazer login no painel administrativo com meu e-mail e senha para receber um token JWT, para que eu possa acessar de forma segura todas as rotas protegidas da API.
 
 **✅ Critérios de Aceitação:**
-- [ ] A rota `POST /auth/login` aceita `{ email, password }` e retorna um JWT assinado com expiração configurável.
-- [ ] Credenciais inválidas retornam `401 Unauthorized` com mensagem padronizada via `HttpExceptionFilter`.
-- [ ] O JWT contém o `userId` e o `role` do gestor no payload (claim).
-- [ ] Todas as rotas administrativas são protegidas por um `JwtAuthGuard`; sem token válido, retornam `401`.
-- [ ] O `RoleGuard` garante que somente usuários com papel `ADMIN` acessem as rotas de gestão.
-- [ ] O DTO de login é validado com `class-validator`; entradas malformadas retornam `400 Bad Request`.
+- [X] A rota `POST /auth/login` aceita `{ email, password }` e retorna um JWT assinado com expiração configurável.
+- [X] Credenciais inválidas retornam `401 Unauthorized` com mensagem padronizada via `HttpExceptionFilter`.
+- [X] O JWT contém o `userId` e o `role` do gestor no payload (claim).
+- [X] Todas as rotas administrativas são protegidas por um `JwtAuthGuard`; sem token válido, retornam `401`.
+- [X] O `RoleGuard` garante que somente usuários com papel `ADMIN` acessem as rotas de gestão.
+- [X] O DTO de login é validado com `class-validator`; entradas malformadas retornam `400 Bad Request`.
 - [ ] O segredo JWT (`JWT_SECRET`) é lido do ambiente via `ConfigModule` e nunca está hardcoded no código.
 
 > **Requisitos técnicos cobertos:** `ID5`, `ID6`, `ID8`, `ID15`
@@ -122,16 +122,16 @@ O sistema é composto por duas frentes:
 **Ator:** Gestor | **História:** Como gestor, quero cadastrar, editar, visualizar e remover jogadores do elenco pelo painel administrativo, para que a lista de atletas esteja sempre atualizada e reflita o time real — substituindo as listas de WhatsApp que se perdem com o tempo.
 
 **✅ Critérios de Aceitação:**
-- [ ] **[C]** `POST /players` — aceita `{ name, number, position, photoUrl? }`. Retorna `201 Created` com o objeto criado.
-- [ ] **[R]** `GET /players` — retorna lista de todos os jogadores ordenada por número (acesso público).
-- [ ] **[R]** `GET /players/:id` — retorna um jogador específico (acesso público).
-- [ ] **[U]** `PATCH /players/:id` — atualiza parcialmente os dados do jogador (requer JWT Admin).
-- [ ] **[D]** `DELETE /players/:id` — remove o jogador; retorna `204 No Content` (requer JWT Admin).
-- [ ] Todas as operações de escrita utilizam DTOs com `class-validator` e `ValidationPipe` com `whitelist: true`.
-- [ ] O `PlayersController` delega toda a lógica ao `PlayersService`; controllers não acessam o Prisma diretamente.
-- [ ] O `PlayersService` utiliza Prisma ORM para todas as operações com o banco de dados.
-- [ ] Respostas de sucesso são formatadas uniformemente pelo `TransformInterceptor` global.
-- [ ] Tentativa de buscar jogador inexistente lança `NotFoundException`, capturada pelo `HttpExceptionFilter`.
+- [X] **[C]** `POST /players` — aceita `{ name, number, position, photoUrl? }`. Retorna `201 Created` com o objeto criado.
+- [X] **[R]** `GET /players` — retorna lista de todos os jogadores ordenada por número (acesso público).
+- [X] **[R]** `GET /players/:id` — retorna um jogador específico (acesso público).
+- [X] **[U]** `PATCH /players/:id` — atualiza parcialmente os dados do jogador (requer JWT Admin).
+- [X] **[D]** `DELETE /players/:id` — remove o jogador; retorna `204 No Content` (requer JWT Admin).
+- [X] Todas as operações de escrita utilizam DTOs com `class-validator` e `ValidationPipe` com `whitelist: true`.
+- [X] O `PlayersController` delega toda a lógica ao `PlayersService`; controllers não acessam o Prisma diretamente.
+- [X] O `PlayersService` utiliza Prisma ORM para todas as operações com o banco de dados.
+- [X] Respostas de sucesso são formatadas uniformemente pelo `TransformInterceptor` global.
+- [X] Tentativa de buscar jogador inexistente lança `NotFoundException`, capturada pelo `HttpExceptionFilter`.
 
 > **Requisitos técnicos cobertos:** `ID5`, `ID6`, `ID7`, `ID8`, `ID9`
 
@@ -189,10 +189,10 @@ O sistema é composto por duas frentes:
 **Ator:** Desenvolvedor | **História:** Como desenvolvedor, quero que todas as respostas de sucesso sigam um envelope padrão via `TransformInterceptor` e que todos os erros sejam capturados por um `HttpExceptionFilter` global, para que o frontend tenha um contrato de API consistente e previsível.
 
 **✅ Critérios de Aceitação:**
-- [ ] O `TransformInterceptor` (implementa `NestInterceptor`) envolve toda resposta de sucesso no formato `{ data: T, statusCode: number, message: string }`.
-- [ ] O `HttpExceptionFilter` (implementa `ExceptionFilter`) captura todas as exceções HTTP e retorna `{ statusCode, message, timestamp, path }`.
-- [ ] Ambos são registrados globalmente no `main.ts` com `app.useGlobalInterceptors` e `app.useGlobalFilters`.
-- [ ] Exceções inesperadas retornam `500 Internal Server Error` sem vazar detalhes internos para o cliente.
+- [X] O `TransformInterceptor` (implementa `NestInterceptor`) envolve toda resposta de sucesso no formato `{ data: T, statusCode: number, message: string }`.
+- [X] O `HttpExceptionFilter` (implementa `ExceptionFilter`) captura todas as exceções HTTP e retorna `{ statusCode, message, timestamp, path }`.
+- [X] Ambos são registrados globalmente no `main.ts` com `app.useGlobalInterceptors` e `app.useGlobalFilters`.
+- [X] Exceções inesperadas retornam `500 Internal Server Error` sem vazar detalhes internos para o cliente.
 
 > **Requisitos técnicos cobertos:** `ID9`
 
@@ -203,7 +203,7 @@ O sistema é composto por duas frentes:
 
 **✅ Critérios de Aceitação:**
 - [ ] Para cada `XxxService`, existe um arquivo `xxx.service.spec.ts` com testes criados **antes** da implementação final (evidenciado pelo histórico de commits).
-- [ ] Os testes cobrem os cenários de **sucesso** (happy path) e de **erro** (ex: entidade não encontrada, dados inválidos) de cada operação de CRUD.
+- [ ] Os testes cobrem os cenários de **sucesso** (happy path) e de **erro** (ex: entidade não encontrada, dados inválidos) de cada operation de CRUD.
 - [ ] O comando `npm run test` executa toda a suite e todos os testes passam com `0 failures`.
 - [ ] A cobertura de código dos services está acima de 70% (`npm run test:cov`).
 - [ ] Os testes utilizam dependências mockadas via `jest.fn()` (Prisma e outros serviços), garantindo isolamento total das unidades.
@@ -216,10 +216,10 @@ O sistema é composto por duas frentes:
 **Ator:** Desenvolvedor | **História:** Como desenvolvedor, quero que a API NestJS exponha uma documentação Swagger interativa e sempre atualizada, para que o frontend, testadores e avaliadores possam explorar e testar os endpoints sem consultar fontes externas.
 
 **✅ Critérios de Aceitação:**
-- [ ] O Swagger UI está disponível na rota `/api/docs` da aplicação backend.
-- [ ] Todos os endpoints estão documentados com `@ApiTags`, `@ApiOperation`, `@ApiResponse` e `@ApiBearerAuth` onde aplicável.
-- [ ] Os DTOs de request e response estão decorados com `@ApiProperty`, gerando schemas automáticos no Swagger.
-- [ ] O endpoint de login está documentado com exemplos de request body e os possíveis códigos de resposta (`200`, `401`).
+- [X] O Swagger UI está disponível na rota `/api` da aplicação backend.
+- [X] Todos os endpoints estão documentados com `@ApiTags`, `@ApiOperation`, `@ApiResponse` e `@ApiBearerAuth` onde aplicável.
+- [X] Os DTOs de request e response estão decorados com `@ApiProperty`, gerando schemas automáticos no Swagger.
+- [X] O endpoint de login está documentado com exemplos de request body e os possíveis códigos de resposta (`200`, `401`).
 
 > **Requisitos técnicos cobertos:** `ID12`
 
@@ -354,6 +354,6 @@ O sistema é composto por duas frentes:
 
 - **Desempenho:** A página pública deve carregar em menos de 3 segundos em conexão 4G (Lighthouse Score > 80).
 - **Segurança:** A API não deve expor dados internos em mensagens de erro; JWTs expiram em no máximo 8 horas.
-- **Responsividade:** Todas as telas do frontend devem funcionar corretamente em dispositivos móveis (320px+), pois a maioria dos torcedores acessa via celular.
+- **Responsiveness:** Todas as telas do frontend devem funcionar corretamente em dispositivos móveis (320px+), pois a maioria dos torcedores acessa via celular.
 - **Manutenibilidade:** Cobertura mínima de 70% nos testes dos services para garantir refatorações seguras.
 - **Disponibilidade:** O sistema deve ter uptime de 99% nos períodos de jogos (fins de semana).
