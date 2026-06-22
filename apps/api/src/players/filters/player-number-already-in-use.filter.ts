@@ -10,11 +10,10 @@ export class PlayerNumberAlreadyInUseFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     response.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
-      success: false,
       statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      timestamp: new Date().toISOString(),
       path: request.url,
       message: exception.message,
-      error: 'Unprocessable Entity',
     });
   }
 }
