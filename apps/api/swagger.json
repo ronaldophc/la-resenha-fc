@@ -739,6 +739,136 @@
           "news"
         ]
       }
+    },
+    "/standings": {
+      "get": {
+        "operationId": "StandingsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tabela de classificação retornada com sucesso"
+          }
+        },
+        "summary": "Retorna a tabela de classificação ordenada por posição",
+        "tags": [
+          "standings"
+        ]
+      },
+      "post": {
+        "operationId": "StandingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStandingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registro cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra uma nova linha na tabela de classificação (Apenas ADMIN)",
+        "tags": [
+          "standings"
+        ]
+      }
+    },
+    "/standings/{id}": {
+      "put": {
+        "operationId": "StandingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStandingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Registro não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza completamente um registro na tabela de classificação por id (Apenas ADMIN)",
+        "tags": [
+          "standings"
+        ]
+      },
+      "delete": {
+        "operationId": "StandingsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Registro removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Registro não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um registro da tabela de classificação por id (Apenas ADMIN)",
+        "tags": [
+          "standings"
+        ]
+      }
     }
   },
   "info": {
@@ -798,6 +928,128 @@
       "CreateNewsDto": {
         "type": "object",
         "properties": {}
+      },
+      "CreateStandingDto": {
+        "type": "object",
+        "properties": {
+          "championship": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Liga Amadora de Futebol 2026"
+          },
+          "position": {
+            "type": "number",
+            "description": "Posição na tabela de classificação",
+            "example": 1
+          },
+          "points": {
+            "type": "number",
+            "description": "Pontos ganhos",
+            "example": 15
+          },
+          "played": {
+            "type": "number",
+            "description": "Partidas jogadas",
+            "example": 6
+          },
+          "won": {
+            "type": "number",
+            "description": "Vitórias",
+            "example": 5
+          },
+          "drawn": {
+            "type": "number",
+            "description": "Empates",
+            "example": 0
+          },
+          "lost": {
+            "type": "number",
+            "description": "Derrotas",
+            "example": 1
+          },
+          "goalsFor": {
+            "type": "number",
+            "description": "Gols marcados (pró)",
+            "example": 18
+          },
+          "goalsAgainst": {
+            "type": "number",
+            "description": "Gols sofridos (contra)",
+            "example": 4
+          }
+        },
+        "required": [
+          "championship",
+          "position",
+          "points",
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goalsFor",
+          "goalsAgainst"
+        ]
+      },
+      "UpdateStandingDto": {
+        "type": "object",
+        "properties": {
+          "championship": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Liga Amadora de Futebol 2026"
+          },
+          "position": {
+            "type": "number",
+            "description": "Posição na tabela de classificação",
+            "example": 1
+          },
+          "points": {
+            "type": "number",
+            "description": "Pontos ganhos",
+            "example": 15
+          },
+          "played": {
+            "type": "number",
+            "description": "Partidas jogadas",
+            "example": 6
+          },
+          "won": {
+            "type": "number",
+            "description": "Vitórias",
+            "example": 5
+          },
+          "drawn": {
+            "type": "number",
+            "description": "Empates",
+            "example": 0
+          },
+          "lost": {
+            "type": "number",
+            "description": "Derrotas",
+            "example": 1
+          },
+          "goalsFor": {
+            "type": "number",
+            "description": "Gols marcados (pró)",
+            "example": 18
+          },
+          "goalsAgainst": {
+            "type": "number",
+            "description": "Gols sofridos (contra)",
+            "example": 4
+          }
+        },
+        "required": [
+          "championship",
+          "position",
+          "points",
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goalsFor",
+          "goalsAgainst"
+        ]
       }
     }
   }

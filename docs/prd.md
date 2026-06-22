@@ -174,12 +174,12 @@ O sistema é composto por duas frentes:
 **Ator:** Gestor | **História:** Como gestor, quero atualizar os dados de classificação do campeonato (pontos, vitórias, saldo de gols), para que os torcedores acompanhem a posição do La Resenha FC sem precisar procurar em grupos de WhatsApp.
 
 **✅ Critérios de Aceitação:**
-- [ ] **[C]** `POST /standings` — aceita `{ championship, position, points, played, won, drawn, lost, goalsFor, goalsAgainst }`. Retorna `201 Created`.
-- [ ] **[R]** `GET /standings` — retorna a tabela ordenada por `position` (acesso público).
-- [ ] **[U]** `PUT /standings/:id` — atualiza o registro completo (requer JWT Admin).
-- [ ] **[D]** `DELETE /standings/:id` — remove o registro (requer JWT Admin).
-- [ ] Todos os campos numéricos são validados com `IsInt()` e `Min(0)` nos DTOs.
-- [ ] O `StandingsService` utiliza Prisma ORM para todas as operações com o banco de dados.
+- [X] **[C]** `POST /standings` — aceita `{ championship, position, points, played, won, drawn, lost, goalsFor, goalsAgainst }`. Retorna `201 Created`.
+- [X] **[R]** `GET /standings` — retorna a tabela ordenada por `position` (acesso público).
+- [X] **[U]** `PUT /standings/:id` — atualiza o registro completo (requer JWT Admin).
+- [X] **[D]** `DELETE /standings/:id` — remove o registro (requer JWT Admin).
+- [X] Todos os campos numéricos são validados com `IsInt()` e `Min(0)` nos DTOs.
+- [X] O `StandingsService` utiliza Prisma ORM para todas as operações com o banco de dados.
 
 > **Requisitos técnicos cobertos:** `ID5`, `ID6`, `ID7`, `ID8`, `ID9`
 
