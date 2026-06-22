@@ -143,14 +143,44 @@
     "/users": {
       "get": {
         "operationId": "UsersController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "description": "Termo de pesquisa para filtrar usuários por e-mail",
+            "schema": {
+              "example": "admin",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página para paginação",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Lista de usuários retornada com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retorna todos os usuários cadastrados (Apenas ADMIN)",
         "tags": [
-          "Users"
+          "users"
         ]
       },
       "post": {
@@ -168,11 +198,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Usuário cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo usuário no sistema (Apenas ADMIN)",
         "tags": [
-          "Users"
+          "users"
         ]
       }
     },
@@ -191,11 +233,23 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Usuário encontrado"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retorna os detalhes de um usuário específico por id (Apenas ADMIN)",
         "tags": [
-          "Users"
+          "users"
         ]
       },
       "put": {
@@ -222,11 +276,26 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Usuário substituído com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Substitui completamente os dados de um usuário (Apenas ADMIN)",
         "tags": [
-          "Users"
+          "users"
         ]
       },
       "patch": {
@@ -243,11 +312,26 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Usuário atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um usuário (Apenas ADMIN)",
         "tags": [
-          "Users"
+          "users"
         ]
       },
       "delete": {
@@ -264,25 +348,59 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Usuário removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um usuário por id (Apenas ADMIN)",
         "tags": [
-          "Users"
+          "users"
         ]
       }
     },
     "/players": {
       "get": {
         "operationId": "PlayersController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "description": "Termo de pesquisa para filtrar jogadores por nome",
+            "schema": {
+              "example": "Silva",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página para paginação",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Lista de jogadores retornada com sucesso"
           }
         },
+        "summary": "Retorna todos os jogadores cadastrados no elenco",
         "tags": [
-          "Players"
+          "players"
         ]
       },
       "post": {
@@ -300,11 +418,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Jogador cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo jogador (Apenas ADMIN)",
         "tags": [
-          "Players"
+          "players"
         ]
       }
     },
@@ -323,11 +453,15 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Jogador encontrado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
           }
         },
+        "summary": "Retorna os detalhes de um jogador específico por id",
         "tags": [
-          "Players"
+          "players"
         ]
       },
       "put": {
@@ -354,11 +488,26 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Jogador substituído com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Substitui completamente os dados de um jogador (Apenas ADMIN)",
         "tags": [
-          "Players"
+          "players"
         ]
       },
       "patch": {
@@ -375,11 +524,26 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Jogador atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um jogador (Apenas ADMIN)",
         "tags": [
-          "Players"
+          "players"
         ]
       },
       "delete": {
@@ -396,11 +560,23 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Jogador removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
           }
         },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um jogador por id (Apenas ADMIN)",
         "tags": [
-          "Players"
+          "players"
         ]
       }
     },
@@ -915,19 +1091,141 @@
       },
       "CreateUserDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Endereço de e-mail do usuário",
+            "example": "joao@email.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Senha de acesso do usuário (mínimo 6 caracteres)",
+            "example": "senha123",
+            "minLength": 6
+          },
+          "role": {
+            "type": "string",
+            "description": "Papel do usuário no sistema (ex: ADMIN)",
+            "example": "ADMIN"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
       },
       "CreatePlayerDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome completo do jogador",
+            "example": "Neymar da Silva"
+          },
+          "number": {
+            "type": "number",
+            "description": "Número da camisa do jogador",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 99
+          },
+          "position": {
+            "type": "string",
+            "description": "Posição tática do jogador",
+            "enum": [
+              "GOALKEEPER",
+              "DEFENDER",
+              "MIDFIELDER",
+              "FORWARD"
+            ],
+            "example": "FORWARD"
+          },
+          "photoUrl": {
+            "type": "string",
+            "description": "URL para a foto do jogador",
+            "example": "https://exemplo.com/fotos/neymar.jpg"
+          }
+        },
+        "required": [
+          "name",
+          "number",
+          "position"
+        ]
       },
       "CreateMatchDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Data e hora da partida no formato ISO 8601",
+            "example": "2026-06-22T21:00:00.000Z"
+          },
+          "opponent": {
+            "type": "string",
+            "description": "Nome do time adversário",
+            "example": "Tabajara FC"
+          },
+          "location": {
+            "type": "string",
+            "description": "Local onde a partida será realizada",
+            "example": "Estádio Pinheirão"
+          },
+          "homeScore": {
+            "type": "number",
+            "description": "Placar do time da casa (La Resenha FC)",
+            "example": 3,
+            "minimum": 0
+          },
+          "awayScore": {
+            "type": "number",
+            "description": "Placar do time visitante (Adversário)",
+            "example": 1,
+            "minimum": 0
+          },
+          "championship": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Copa UTFR 2026"
+          }
+        },
+        "required": [
+          "date",
+          "opponent",
+          "location",
+          "homeScore",
+          "awayScore"
+        ]
       },
       "CreateNewsDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Título da notícia",
+            "example": "La Resenha FC vence o clássico local por 3x1!",
+            "maxLength": 200
+          },
+          "content": {
+            "type": "string",
+            "description": "Conteúdo principal da notícia",
+            "example": "Em um jogo eletrizante na noite de ontem, o time jogou muito bem...",
+            "minLength": 10
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "URL da imagem de destaque da notícia",
+            "example": "https://exemplo.com/imagens/vitoria.jpg"
+          },
+          "publishedAt": {
+            "type": "string",
+            "description": "Data de publicação da notícia (padrão é agora)",
+            "example": "2026-06-22T21:00:00.000Z"
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
       },
       "CreateStandingDto": {
         "type": "object",
