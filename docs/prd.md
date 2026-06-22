@@ -158,13 +158,13 @@ O sistema é composto por duas frentes:
 **Ator:** Gestor | **História:** Como gestor, quero publicar, editar e remover notícias e comunicados pelo painel administrativo, para que os torcedores sejam informados sobre as novidades do time em um canal próprio — sem depender do alcance orgânico do Instagram.
 
 **✅ Critérios de Aceitação:**
-- [ ] **[C]** `POST /news` — aceita `{ title, content, imageUrl?, publishedAt? }`. Retorna `201 Created`.
-- [ ] **[R]** `GET /news` — retorna lista de notícias ordenadas pela data mais recente (acesso público).
-- [ ] **[R]** `GET /news/:id` — retorna o conteúdo completo de uma notícia (acesso público).
-- [ ] **[U]** `PATCH /news/:id` — atualiza a notícia (requer JWT Admin).
-- [ ] **[D]** `DELETE /news/:id` — remove a notícia (requer JWT Admin).
-- [ ] O `title` é validado como `IsString()` e `MaxLength(200)`; `content` como `IsString()` e `MinLength(10)`.
-- [ ] O `NewsService` utiliza Prisma ORM para todas as operações com o banco de dados.
+- [X] **[C]** `POST /news` — aceita `{ title, content, imageUrl?, publishedAt? }`. Retorna `201 Created`.
+- [X] **[R]** `GET /news` — retorna lista de notícias ordenadas pela data mais recente (acesso público).
+- [X] **[R]** `GET /news/:id` — retorna o conteúdo completo de uma notícia (acesso público).
+- [X] **[U]** `PATCH /news/:id` — atualiza a notícia (requer JWT Admin).
+- [X] **[D]** `DELETE /news/:id` — remove a notícia (requer JWT Admin).
+- [X] O `title` é validado como `IsString()` e `MaxLength(200)`; `content` como `IsString()` e `MinLength(10)`.
+- [X] O `NewsService` utiliza Prisma ORM para todas as operações com o banco de dados.
 
 > **Requisitos técnicos cobertos:** `ID5`, `ID6`, `ID7`, `ID8`, `ID9`
 

@@ -594,6 +594,151 @@
           "matches"
         ]
       }
+    },
+    "/news": {
+      "get": {
+        "operationId": "NewsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de notícias retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todas as notícias ordenadas por data de publicação decrescente",
+        "tags": [
+          "news"
+        ]
+      },
+      "post": {
+        "operationId": "NewsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNewsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notícia cadastrada com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra uma nova notícia (Apenas ADMIN)",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/news/{id}": {
+      "get": {
+        "operationId": "NewsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notícia encontrada"
+          },
+          "404": {
+            "description": "Notícia não encontrada"
+          }
+        },
+        "summary": "Retorna os detalhes de uma notícia específica por id",
+        "tags": [
+          "news"
+        ]
+      },
+      "patch": {
+        "operationId": "NewsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notícia atualizada com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Notícia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente uma notícia (Apenas ADMIN)",
+        "tags": [
+          "news"
+        ]
+      },
+      "delete": {
+        "operationId": "NewsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Notícia removida com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Notícia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove uma notícia por id (Apenas ADMIN)",
+        "tags": [
+          "news"
+        ]
+      }
     }
   },
   "info": {
@@ -647,6 +792,10 @@
         "properties": {}
       },
       "CreateMatchDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateNewsDto": {
         "type": "object",
         "properties": {}
       }
