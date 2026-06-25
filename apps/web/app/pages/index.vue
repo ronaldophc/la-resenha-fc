@@ -1,317 +1,170 @@
 <template>
-  <div class="container">
-    <!-- Hero Banner section -->
-    <section class="hero-section">
-      <div class="hero-card card card-featured">
-        <div class="hero-badge">{{ t.heroBadge }}</div>
-        <h1>{{ t.heroTitle }}</h1>
-        <p class="hero-subtitle">{{ t.heroSubtitle }}</p>
-        <div class="hero-actions">
-          <NuxtLink to="/elenco" class="btn btn-primary">{{ t.actionSquad }}</NuxtLink>
-          <NuxtLink to="/resultados" class="btn btn-outline">{{ t.actionResults }}</NuxtLink>
+  <div class="welcome-section">
+    <!-- Base Neobrutalist Card Component -->
+    <VCard variant="featured" class="welcome-card">
+      <div class="status-badge">🟢 ESTRUTURA CONFIGURADA</div>
+      <h1>La Resenha FC</h1>
+      <p class="subtitle">
+        A estrutura base do **Nuxt 4** foi reconstruída do zero com sucesso!
+      </p>
+      
+      <div class="features-list">
+        <div class="feature-item">
+          <strong>📂 Estrutura Limpa:</strong> Diretórios organizados seguindo as diretrizes oficiais do Nuxt 4.
+        </div>
+        <div class="feature-item">
+          <strong>🧱 Componentes Reutilizáveis:</strong> Botões (`VButton`) e Cards (`VCard`) integrados ao Design System.
+        </div>
+        <div class="feature-item">
+          <strong>🛡️ Autenticação SSR-Safe:</strong> Sessões armazenadas em cookies com guards de rotas (`auth` e `guest` middlewares).
+        </div>
+        <div class="feature-item">
+          <strong>🌐 Cliente de API Inteligente:</strong> `useApi` pronto para se comunicar com o backend NestJS de forma automática.
         </div>
       </div>
-    </section>
 
-    <!-- Matches Overview Grid -->
-    <section class="matches-section">
-      <h2 class="section-title">{{ t.matchesTitle }}</h2>
-      <div class="grid grid-cols-2">
-        <!-- Last Match card -->
-        <div class="card match-card">
-          <div class="match-badge badge-last">{{ t.lastMatch }}</div>
-          <div class="match-teams">
-            <div class="team">
-              <span class="team-name">{{ t.ourTeam }}</span>
-              <span class="team-score score-win">3</span>
-            </div>
-            <div class="versus">X</div>
-            <div class="team">
-              <span class="team-name">Bairro Alto FC</span>
-              <span class="team-score score-loss">1</span>
-            </div>
-          </div>
-          <div class="match-details">
-            <p><strong>{{ t.competitionLabel }}:</strong> Amador - Liga de Curitiba</p>
-            <p><strong>{{ t.dateLabel }}:</strong> 14/06/2026</p>
-            <p><strong>{{ t.pitchLabel }}:</strong> Arena Terrão La Resenha</p>
-          </div>
-        </div>
-
-        <!-- Next Match card -->
-        <div class="card match-card card-warning">
-          <div class="match-badge badge-next">{{ t.nextMatch }}</div>
-          <div class="match-teams">
-            <div class="team">
-              <span class="team-name">{{ t.ourTeam }}</span>
-              <span class="team-score score-number">-</span>
-            </div>
-            <div class="versus">X</div>
-            <div class="team">
-              <span class="team-name">Vila Sandra EC</span>
-              <span class="team-score score-number">-</span>
-            </div>
-          </div>
-          <div class="match-details">
-            <p><strong>{{ t.competitionLabel }}:</strong> Amador - Liga de Curitiba</p>
-            <p><strong>{{ t.dateLabel }}:</strong> 28/06/2026 - 15:00</p>
-            <p><strong>{{ t.pitchLabel }}:</strong> Estádio Vila Sandra (Campo do Estrela)</p>
-          </div>
-        </div>
+      <div class="welcome-actions">
+        <VButton variant="primary" @click="testApiCall">
+          Testar Conexão com API
+        </VButton>
+        <VButton to="/admin" variant="outline">
+          Acessar Painel Admin (Protegido)
+        </VButton>
       </div>
-    </section>
 
-    <!-- Latest News section -->
-    <section class="news-section">
-      <h2 class="section-title">{{ t.newsTitle }}</h2>
-      <div class="grid grid-cols-3">
-        <div v-for="item in newsList" :key="item.id" class="card news-card">
-          <div class="news-meta">
-            <span class="tag-badge tag-badge-yellow">{{ item.category }}</span>
-            <span class="news-date">{{ item.date }}</span>
-          </div>
-          <h3>{{ item.title }}</h3>
-          <p>{{ item.excerpt }}</p>
-          <NuxtLink :to="`/noticias/${item.id}`" class="btn btn-sm btn-outline">{{ t.readMore }}</NuxtLink>
-        </div>
+      <!-- Feedback Area -->
+      <div v-if="apiStatus" :class="['api-feedback', { 'feedback-success': apiSuccess, 'feedback-error': !apiSuccess }]">
+        {{ apiStatus }}
       </div>
-    </section>
+    </VCard>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useHead } from '#imports';
+import { useHead, useApi } from '#imports';
+import VCard from '~/components/ui/VCard.vue';
+import VButton from '~/components/ui/VButton.vue';
 
-// Head details for SEO
+// SEO Meta details
 useHead({
-  title: 'La Resenha FC - O Terror do Terrão de Curitiba',
+  title: 'La Resenha FC - Estrutura Base Nuxt 4',
   meta: [
-    { name: 'description', content: 'Site oficial do La Resenha FC, acompanhe elenco, notícias, resultados e tabela de classificação.' }
+    { name: 'description', content: 'Estrutura do frontend do projeto La Resenha FC reconstruída com sucesso.' }
   ]
 });
 
-// Translation dictionary
-const translations = {
-  pt: {
-    heroBadge: '⚠️ Resenha & Futebol Raiz',
-    heroTitle: 'La Resenha FC',
-    heroSubtitle: 'Aqui o futebol é jogado na sola do sapato, a poeira sobe e a cerveja desce gelada. Bem-vindo ao portal do clube mais temido da várzea de Curitiba.',
-    actionSquad: 'Conheça o Elenco',
-    actionResults: 'Últimos Resultados',
-    matchesTitle: 'Confrontos',
-    lastMatch: 'Última Partida',
-    nextMatch: 'Próxima Partida',
-    ourTeam: 'La Resenha FC',
-    competitionLabel: 'Campeonato',
-    dateLabel: 'Data',
-    pitchLabel: 'Local',
-    newsTitle: 'Últimas da Várzea',
-    readMore: 'Ler Notícia'
+const { request } = useApi();
+const apiStatus = ref('');
+const apiSuccess = ref(false);
+
+const testApiCall = async () => {
+  apiStatus.value = 'Conectando à API...';
+  apiSuccess.value = false;
+  
+  try {
+    // Tenta acessar o endpoint público de saúde da API
+    // Se não houver endpoint de saúde, a chamada padrão para '/' funciona na maioria das APIs NestJS
+    const response = await request<{ message?: string } | string>('/');
+    apiSuccess.value = true;
+    apiStatus.value = '⚡ Conexão com a API NestJS realizada com sucesso!';
+  } catch (error: any) {
+    apiSuccess.value = false;
+    apiStatus.value = `❌ Falha ao conectar com a API: ${error.message || 'Sem resposta do servidor (localhost:3001)'}`;
   }
 };
-
-const t = translations.pt;
-
-// Mock news list
-interface NewsItem {
-  id: number;
-  title: string;
-  excerpt: string;
-  date: string;
-  category: string;
-}
-
-const newsList = ref<NewsItem[]>([
-  {
-    id: 1,
-    title: 'Virada Épica na Arena Terrão!',
-    excerpt: 'Com dois gols no final do segundo tempo, o La Resenha vira a partida contra o Bairro Alto e garante 3 pontos importantes.',
-    date: '14/06/2026',
-    category: 'Súmula de Jogo'
-  },
-  {
-    id: 2,
-    title: 'Preparação Física na AABB',
-    excerpt: 'Elenco principal realiza treinos de força e corrida na areia visando o confronto difícil da próxima semana.',
-    date: '10/06/2026',
-    category: 'Bastidores'
-  },
-  {
-    id: 3,
-    title: 'Churrasco da Vitória Confirmado',
-    excerpt: 'Diretoria anuncia churrasco oficial de confraternização pós-jogo no sábado. Pagamento da vaquinha até quarta-feira.',
-    date: '08/06/2026',
-    category: 'Eventos'
-  }
-]);
 </script>
 
 <style scoped>
-.hero-section {
-  margin-bottom: 48px;
+.welcome-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
 }
 
-.hero-card {
-  padding: 48px;
-  text-align: center;
+.welcome-card {
+  max-width: 680px;
+  width: 100%;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
-.hero-badge {
+.status-badge {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.125rem;
   font-weight: 700;
-  text-transform: uppercase;
+  font-size: 1.1rem;
   background-color: var(--color-asphalt);
-  color: var(--color-goal-white);
-  padding: 4px 12px;
+  color: var(--color-primary);
+  padding: 6px 16px;
   border-radius: var(--radius-sm);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   border: 1px solid var(--color-primary);
+  letter-spacing: 0.05em;
 }
 
-.hero-subtitle {
+h1 {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+}
+
+.subtitle {
   font-size: 1.25rem;
-  max-width: 800px;
+  color: var(--color-goal-white);
   margin-bottom: 32px;
-  color: rgba(255, 255, 255, 0.9);
 }
 
-.hero-actions {
+.features-list {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: rgba(9, 9, 9, 0.4);
+  border: var(--border-width-regular) solid var(--color-asphalt);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-bottom: 32px;
+  width: 100%;
+}
+
+.feature-item {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #e5e5e5;
+}
+
+.welcome-actions {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 
-.section-title {
-  border-left: 6px solid var(--color-tertiary);
-  padding-left: 16px;
-  margin-bottom: 32px;
-  font-size: 2.25rem;
-}
-
-.matches-section, .news-section {
-  margin-bottom: 56px;
-}
-
-.match-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.match-badge {
+.api-feedback {
+  margin-top: 24px;
+  padding: 12px 20px;
+  border: var(--border-width-regular) solid var(--color-asphalt);
+  border-radius: var(--radius-default);
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.95rem;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  align-self: flex-start;
-  margin-bottom: 16px;
-  border: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+  width: 100%;
+  text-align: center;
 }
 
-.badge-last {
-  background-color: var(--color-primary-container);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+.feedback-success {
+  background-color: rgba(74, 222, 128, 0.15);
+  border-color: var(--color-vibrant-turf);
+  color: var(--color-vibrant-turf);
 }
 
-.badge-next {
-  background-color: var(--color-tertiary-container);
-  color: var(--color-tertiary);
-  border-color: var(--color-tertiary);
-}
-
-.match-teams {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  margin: 16px 0;
-}
-
-.team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.team-name {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.5rem;
-  text-transform: uppercase;
-}
-
-.team-score {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 700;
-  background-color: var(--color-asphalt);
-  padding: 4px 20px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--color-surface-bright);
-}
-
-.score-win {
-  color: var(--color-primary);
-}
-
-.score-loss {
-  color: #ffb4ab;
-}
-
-.versus {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.25rem;
-  color: var(--color-tertiary);
-  font-weight: 700;
-}
-
-.match-details {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 16px;
-  margin-top: 16px;
-  font-size: 0.95rem;
-}
-
-.match-details p {
-  margin-bottom: 4px;
-}
-
-.news-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-}
-
-.news-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.news-date {
-  font-size: 0.85rem;
-  color: #a3a3a3;
-}
-
-.news-card h3 {
-  font-size: 1.35rem;
-  line-height: 1.2;
-  margin-bottom: 12px;
-}
-
-.news-card p {
-  font-size: 0.95rem;
-  color: #e5e5e5;
-  margin-bottom: 24px;
+.feedback-error {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 </style>
