@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StandingsService } from './standings.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { CreateStandingDto } from './dto/create-standing.dto';
 
 describe('StandingsService', () => {
   let service: StandingsService;
@@ -9,7 +10,8 @@ describe('StandingsService', () => {
 
   const mockStanding = {
     id: 1,
-    championship: 'Liga Amadora 2026',
+    championshipId: 1,
+    teamId: 2,
     position: 1,
     points: 15,
     played: 5,
@@ -27,8 +29,15 @@ describe('StandingsService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+    },
+    championship: {
+      findUnique: jest.fn(),
+    },
+    team: {
+      findUnique: jest.fn(),
     },
   };
 
@@ -57,8 +66,9 @@ describe('StandingsService', () => {
 
   describe('create', () => {
     it('should create a standing and return it', async () => {
-      const dto = {
-        championship: 'Liga Amadora 2026',
+      const dto: CreateStandingDto = {
+        championshipId: 1,
+        teamId: 2,
         position: 1,
         points: 15,
         played: 5,
@@ -69,11 +79,41 @@ describe('StandingsService', () => {
         goalsAgainst: 2,
       };
 
+      mockPrismaService.championship.findUnique.mockResolvedValue({ id: 1, name: 'Liga Amadora 2026' });
+      mockPrismaService.team.findUnique.mockResolvedValue({ id: 2, name: 'Resenha FC' });
+      mockPrismaService.standing.findUnique.mockResolvedValue(null);
       mockPrismaService.standing.create.mockResolvedValue(mockStanding);
 
       const result = await service.create(dto);
 
-      expect(prisma.standing.create).toHaveBeenCalledWith({ data: dto });
+      expect(prisma.championship.findUnique).toHaveBeenCalledWith({ where: { id: dto.championshipId } });
+      expect(prisma.team.findUnique).toHaveBeenCalledWith({ where: { id: dto.teamId } });
+      expect(prisma.standing.findUnique).toHaveBeenCalledWith({
+        where: {
+          championshipId_teamId: {
+            championshipId: dto.championshipId,
+            teamId: dto.teamId,
+          },
+        },
+      });
+      expect(prisma.standing.create).toHaveBeenCalledWith({
+        data: {
+          championshipId: dto.championshipId,
+          teamId: dto.teamId,
+          position: dto.position,
+          points: dto.points,
+          played: dto.played,
+          won: dto.won,
+          drawn: dto.drawn,
+          lost: dto.lost,
+          goalsFor: dto.goalsFor,
+          goalsAgainst: dto.goalsAgainst,
+        },
+        include: {
+          championship: true,
+          team: true,
+        },
+      });
       expect(result).toEqual(mockStanding);
     });
   });
@@ -85,7 +125,14 @@ describe('StandingsService', () => {
       const result = await service.findAll();
 
       expect(prisma.standing.findMany).toHaveBeenCalledWith({
-        orderBy: { position: 'asc' },
+        include: {
+          championship: true,
+          team: true,
+        },
+        orderBy: [
+          { championshipId: 'asc' },
+          { position: 'asc' },
+        ],
       });
       expect(result).toEqual([mockStanding]);
     });
@@ -99,6 +146,10 @@ describe('StandingsService', () => {
 
       expect(prisma.standing.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
+        include: {
+          championship: true,
+          team: true,
+        },
       });
       expect(result).toEqual(mockStanding);
     });
@@ -113,7 +164,8 @@ describe('StandingsService', () => {
   describe('update', () => {
     it('should update a standing and return the updated entity', async () => {
       const dto = {
-        championship: 'Liga Amadora 2026 Atualizada',
+        championshipId: 1,
+        teamId: 2,
         position: 2,
         points: 12,
         played: 5,
@@ -133,10 +185,18 @@ describe('StandingsService', () => {
 
       expect(prisma.standing.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
+        include: {
+          championship: true,
+          team: true,
+        },
       });
       expect(prisma.standing.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: dto,
+        include: {
+          championship: true,
+          team: true,
+        },
       });
       expect(result).toEqual(updatedStanding);
     });
@@ -157,6 +217,10 @@ describe('StandingsService', () => {
 
       expect(prisma.standing.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
+        include: {
+          championship: true,
+          team: true,
+        },
       });
       expect(prisma.standing.delete).toHaveBeenCalledWith({
         where: { id: 1 },
