@@ -1,0 +1,1739 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário registrado com sucesso"
+          },
+          "400": {
+            "description": "Email já cadastrado"
+          }
+        },
+        "summary": "Registra um novo usuário",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Realiza a autenticação com e-mail e senha, retornando o token de acesso JWT.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "E-mail cadastrado."
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Senha do usuário."
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              },
+              "examples": {
+                "valido": {
+                  "summary": "Exemplo válido",
+                  "value": {
+                    "email": "usuario@email.com",
+                    "password": "SenhaSegura123"
+                  }
+                },
+                "invalido": {
+                  "summary": "Exemplo inválido",
+                  "value": {
+                    "email": "email-invalido",
+                    "password": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso."
+          },
+          "201": {
+            "description": "Sessão criada com sucesso."
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos."
+          },
+          "401": {
+            "description": "Credenciais incorretas."
+          },
+          "403": {
+            "description": "Acesso recusado ou conta suspensa."
+          },
+          "404": {
+            "description": "Usuário não encontrado."
+          },
+          "409": {
+            "description": "Conflito na autenticação ou múltiplas sessões ativas."
+          },
+          "500": {
+            "description": "Erro interno do servidor."
+          }
+        },
+        "summary": "Autenticar usuário",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "operationId": "AuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "description": "Termo de pesquisa para filtrar usuários por e-mail",
+            "schema": {
+              "example": "admin",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página para paginação",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de usuários retornada com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retorna todos os usuários cadastrados (Apenas ADMIN)",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo usuário no sistema (Apenas ADMIN)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário encontrado"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retorna os detalhes de um usuário específico por id (Apenas ADMIN)",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "operationId": "UsersController_replace",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário substituído com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Substitui completamente os dados de um usuário (Apenas ADMIN)",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuário atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um usuário (Apenas ADMIN)",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usuário removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um usuário por id (Apenas ADMIN)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/players": {
+      "get": {
+        "operationId": "PlayersController_findAll",
+        "parameters": [
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "description": "Termo de pesquisa para filtrar jogadores por nome",
+            "schema": {
+              "example": "Silva",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Número da página para paginação",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de jogadores retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todos os jogadores cadastrados no elenco",
+        "tags": [
+          "players"
+        ]
+      },
+      "post": {
+        "operationId": "PlayersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlayerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Jogador cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo jogador (Apenas ADMIN)",
+        "tags": [
+          "players"
+        ]
+      }
+    },
+    "/players/{id}": {
+      "get": {
+        "operationId": "PlayersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jogador encontrado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
+          }
+        },
+        "summary": "Retorna os detalhes de um jogador específico por id",
+        "tags": [
+          "players"
+        ]
+      },
+      "put": {
+        "operationId": "PlayersController_replace",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlayerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Jogador substituído com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Substitui completamente os dados de um jogador (Apenas ADMIN)",
+        "tags": [
+          "players"
+        ]
+      },
+      "patch": {
+        "operationId": "PlayersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Jogador atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um jogador (Apenas ADMIN)",
+        "tags": [
+          "players"
+        ]
+      },
+      "delete": {
+        "operationId": "PlayersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Jogador removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Jogador não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um jogador por id (Apenas ADMIN)",
+        "tags": [
+          "players"
+        ]
+      }
+    },
+    "/matches": {
+      "get": {
+        "operationId": "MatchesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de partidas retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todas as partidas ordenadas por data decrescente",
+        "tags": [
+          "matches"
+        ]
+      },
+      "post": {
+        "operationId": "MatchesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Partida cadastrada com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra uma nova partida (Apenas ADMIN)",
+        "tags": [
+          "matches"
+        ]
+      }
+    },
+    "/matches/{id}": {
+      "get": {
+        "operationId": "MatchesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Partida encontrada"
+          },
+          "404": {
+            "description": "Partida não encontrada"
+          }
+        },
+        "summary": "Retorna os detalhes de uma partida específica por id",
+        "tags": [
+          "matches"
+        ]
+      },
+      "put": {
+        "operationId": "MatchesController_replace",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Partida substituída com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Partida não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Substitui completamente os dados de uma partida (Apenas ADMIN)",
+        "tags": [
+          "matches"
+        ]
+      },
+      "patch": {
+        "operationId": "MatchesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Partida atualizada com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Partida não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente uma partida (Apenas ADMIN)",
+        "tags": [
+          "matches"
+        ]
+      },
+      "delete": {
+        "operationId": "MatchesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Partida removida com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Partida não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove uma partida por id (Apenas ADMIN)",
+        "tags": [
+          "matches"
+        ]
+      }
+    },
+    "/news": {
+      "get": {
+        "operationId": "NewsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de notícias retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todas as notícias ordenadas por data de publicação decrescente",
+        "tags": [
+          "news"
+        ]
+      },
+      "post": {
+        "operationId": "NewsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNewsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Notícia cadastrada com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra uma nova notícia (Apenas ADMIN)",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/news/{id}": {
+      "get": {
+        "operationId": "NewsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notícia encontrada"
+          },
+          "404": {
+            "description": "Notícia não encontrada"
+          }
+        },
+        "summary": "Retorna os detalhes de uma notícia específica por id",
+        "tags": [
+          "news"
+        ]
+      },
+      "patch": {
+        "operationId": "NewsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notícia atualizada com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Notícia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente uma notícia (Apenas ADMIN)",
+        "tags": [
+          "news"
+        ]
+      },
+      "delete": {
+        "operationId": "NewsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Notícia removida com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Notícia não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove uma notícia por id (Apenas ADMIN)",
+        "tags": [
+          "news"
+        ]
+      }
+    },
+    "/standings": {
+      "get": {
+        "operationId": "StandingsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Tabela de classificação retornada com sucesso"
+          }
+        },
+        "summary": "Retorna a tabela de classificação ordenada por posição",
+        "tags": [
+          "standings"
+        ]
+      },
+      "post": {
+        "operationId": "StandingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStandingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registro cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra uma nova linha na tabela de classificação (Apenas ADMIN)",
+        "tags": [
+          "standings"
+        ]
+      }
+    },
+    "/standings/{id}": {
+      "put": {
+        "operationId": "StandingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStandingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Registro não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza completamente um registro na tabela de classificação por id (Apenas ADMIN)",
+        "tags": [
+          "standings"
+        ]
+      },
+      "delete": {
+        "operationId": "StandingsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Registro removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Registro não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um registro da tabela de classificação por id (Apenas ADMIN)",
+        "tags": [
+          "standings"
+        ]
+      }
+    },
+    "/teams": {
+      "get": {
+        "operationId": "TeamsController_findAll",
+        "parameters": [
+          {
+            "name": "filter",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de times retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todos os times cadastrados",
+        "tags": [
+          "teams"
+        ]
+      },
+      "post": {
+        "operationId": "TeamsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Time cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo time (Apenas ADMIN)",
+        "tags": [
+          "teams"
+        ]
+      }
+    },
+    "/teams/{id}": {
+      "get": {
+        "operationId": "TeamsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time encontrado"
+          },
+          "404": {
+            "description": "Time não encontrado"
+          }
+        },
+        "summary": "Retorna os detalhes de um time específico por id",
+        "tags": [
+          "teams"
+        ]
+      },
+      "patch": {
+        "operationId": "TeamsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Time atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Time não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um time (Apenas ADMIN)",
+        "tags": [
+          "teams"
+        ]
+      },
+      "delete": {
+        "operationId": "TeamsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Time removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Time não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um time por id (Apenas ADMIN)",
+        "tags": [
+          "teams"
+        ]
+      }
+    },
+    "/championships": {
+      "get": {
+        "operationId": "ChampionshipsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de campeonatos retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todos os campeonatos cadastrados",
+        "tags": [
+          "championships"
+        ]
+      },
+      "post": {
+        "operationId": "ChampionshipsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChampionshipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Campeonato cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo campeonato (Apenas ADMIN)",
+        "tags": [
+          "championships"
+        ]
+      }
+    },
+    "/championships/{id}": {
+      "get": {
+        "operationId": "ChampionshipsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campeonato encontrado"
+          },
+          "404": {
+            "description": "Campeonato não encontrado"
+          }
+        },
+        "summary": "Retorna os detalhes de um campeonato específico com classificação por id",
+        "tags": [
+          "championships"
+        ]
+      },
+      "patch": {
+        "operationId": "ChampionshipsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChampionshipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campeonato atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Campeonato não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um campeonato (Apenas ADMIN)",
+        "tags": [
+          "championships"
+        ]
+      },
+      "delete": {
+        "operationId": "ChampionshipsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Campeonato removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Campeonato não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um campeonato por id (Apenas ADMIN)",
+        "tags": [
+          "championships"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "API com Swagger",
+    "description": "Documentação automática da API com Swagger",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "joao@email.com",
+            "description": "Email do usuário a ser cadastrado"
+          },
+          "password": {
+            "type": "string",
+            "example": "123456",
+            "description": "Senha do usuário a ser cadastrado"
+          },
+          "role": {
+            "type": "string",
+            "example": "admin",
+            "description": "Papel (role) do usuário a ser cadastrado"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Endereço de e-mail do usuário",
+            "example": "joao@email.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Senha de acesso do usuário (mínimo 6 caracteres)",
+            "example": "senha123",
+            "minLength": 6
+          },
+          "role": {
+            "type": "string",
+            "description": "Papel do usuário no sistema (ex: ADMIN)",
+            "example": "ADMIN"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "CreatePlayerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome completo do jogador",
+            "example": "Neymar da Silva"
+          },
+          "number": {
+            "type": "number",
+            "description": "Número da camisa do jogador",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 99
+          },
+          "position": {
+            "type": "string",
+            "description": "Posição tática do jogador",
+            "enum": [
+              "GOALKEEPER",
+              "DEFENDER",
+              "MIDFIELDER",
+              "FORWARD"
+            ],
+            "example": "FORWARD"
+          },
+          "photoUrl": {
+            "type": "string",
+            "description": "URL para a foto do jogador",
+            "example": "https://exemplo.com/fotos/neymar.jpg"
+          }
+        },
+        "required": [
+          "name",
+          "number",
+          "position"
+        ]
+      },
+      "CreateMatchDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Data e hora da partida no formato ISO 8601",
+            "example": "2026-06-22T21:00:00.000Z"
+          },
+          "opponent": {
+            "type": "string",
+            "description": "Nome do time adversário",
+            "example": "Tabajara FC"
+          },
+          "location": {
+            "type": "string",
+            "description": "Local onde a partida será realizada",
+            "example": "Estádio Pinheirão"
+          },
+          "homeScore": {
+            "type": "number",
+            "description": "Placar do time da casa (La Resenha FC)",
+            "example": 3,
+            "minimum": 0
+          },
+          "awayScore": {
+            "type": "number",
+            "description": "Placar do time visitante (Adversário)",
+            "example": 1,
+            "minimum": 0
+          },
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato associado",
+            "example": 1
+          }
+        },
+        "required": [
+          "date",
+          "opponent",
+          "location",
+          "homeScore",
+          "awayScore"
+        ]
+      },
+      "CreateNewsDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Título da notícia",
+            "example": "La Resenha FC vence o clássico local por 3x1!",
+            "maxLength": 200
+          },
+          "content": {
+            "type": "string",
+            "description": "Conteúdo principal da notícia",
+            "example": "Em um jogo eletrizante na noite de ontem, o time jogou muito bem...",
+            "minLength": 10
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "URL da imagem de destaque da notícia",
+            "example": "https://exemplo.com/imagens/vitoria.jpg"
+          },
+          "publishedAt": {
+            "type": "string",
+            "description": "Data de publicação da notícia (padrão é agora)",
+            "example": "2026-06-22T21:00:00.000Z"
+          }
+        },
+        "required": [
+          "title",
+          "content"
+        ]
+      },
+      "CreateStandingDto": {
+        "type": "object",
+        "properties": {
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato associado",
+            "example": 1
+          },
+          "teamId": {
+            "type": "number",
+            "description": "ID do time associado",
+            "example": 1
+          },
+          "position": {
+            "type": "number",
+            "description": "Posição na tabela de classificação",
+            "example": 1
+          },
+          "points": {
+            "type": "number",
+            "description": "Pontos ganhos",
+            "example": 15
+          },
+          "played": {
+            "type": "number",
+            "description": "Partidas jogadas",
+            "example": 6
+          },
+          "won": {
+            "type": "number",
+            "description": "Vitórias",
+            "example": 5
+          },
+          "drawn": {
+            "type": "number",
+            "description": "Empates",
+            "example": 0
+          },
+          "lost": {
+            "type": "number",
+            "description": "Derrotas",
+            "example": 1
+          },
+          "goalsFor": {
+            "type": "number",
+            "description": "Gols marcados (pró)",
+            "example": 18
+          },
+          "goalsAgainst": {
+            "type": "number",
+            "description": "Gols sofridos (contra)",
+            "example": 4
+          }
+        },
+        "required": [
+          "championshipId",
+          "teamId",
+          "position",
+          "points",
+          "played",
+          "won",
+          "drawn",
+          "lost",
+          "goalsFor",
+          "goalsAgainst"
+        ]
+      },
+      "UpdateStandingDto": {
+        "type": "object",
+        "properties": {
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato associado",
+            "example": 1
+          },
+          "teamId": {
+            "type": "number",
+            "description": "ID do time associado",
+            "example": 1
+          },
+          "position": {
+            "type": "number",
+            "description": "Posição na tabela de classificação",
+            "example": 1
+          },
+          "points": {
+            "type": "number",
+            "description": "Pontos ganhos",
+            "example": 15
+          },
+          "played": {
+            "type": "number",
+            "description": "Partidas jogadas",
+            "example": 6
+          },
+          "won": {
+            "type": "number",
+            "description": "Vitórias",
+            "example": 5
+          },
+          "drawn": {
+            "type": "number",
+            "description": "Empates",
+            "example": 0
+          },
+          "lost": {
+            "type": "number",
+            "description": "Derrotas",
+            "example": 1
+          },
+          "goalsFor": {
+            "type": "number",
+            "description": "Gols marcados (pró)",
+            "example": 18
+          },
+          "goalsAgainst": {
+            "type": "number",
+            "description": "Gols sofridos (contra)",
+            "example": 4
+          }
+        }
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do time",
+            "example": "La Resenha FC"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo/escudo do time",
+            "example": "https://exemplo.com/escudo.png"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do time",
+            "example": "La Resenha FC"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo/escudo do time",
+            "example": "https://exemplo.com/escudo.png"
+          }
+        }
+      },
+      "CreateChampionshipDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Copa Várzea Curitiba 2026"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo do campeonato",
+            "example": "https://exemplo.com/logo-champ.png"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateChampionshipDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Copa Várzea Curitiba 2026"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo do campeonato",
+            "example": "https://exemplo.com/logo-champ.png"
+          }
+        }
+      }
+    }
+  }
+}

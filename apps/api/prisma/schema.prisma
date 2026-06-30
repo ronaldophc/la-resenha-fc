@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  news         News[]
+
+  @@map("users")
+}
+
+model Player {
+  id        Int      @id @default(autoincrement())
+  name      String
+  number    Int      @unique
+  position  String   // "GOALKEEPER | DEFENDER | MIDFIELDER | FORWARD"
+  photoUrl  String?  @map("photo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("players")
+}
+
+model Championship {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  logoUrl   String?    @map("logo_url")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  standings Standing[]
+  matches   Match[]
+
+  @@map("championships")
+}
+
+model Team {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  logoUrl   String?    @map("logo_url")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  standings Standing[]
+
+  @@map("teams")
+}
+
+model Match {
+  id             Int           @id @default(autoincrement())
+  date           DateTime
+  opponent       String
+  location       String
+  homeScore      Int           @map("home_score")
+  awayScore      Int           @map("away_score")
+  championshipId Int?          @map("championship_id")
+  championship   Championship? @relation(fields: [championshipId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@map("matches")
+}
+
+model News {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String   @db.Text
+  imageUrl    String?  @map("image_url")
+  publishedAt DateTime @default(now()) @map("published_at")
+  authorId    Int      @map("author_id")
+  author      User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("news")
+}
+
+model Standing {
+  id             Int          @id @default(autoincrement())
+  championshipId Int          @map("championship_id")
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  teamId         Int          @map("team_id")
+  team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  position       Int
+  points         Int
+  played         Int
+  won            Int
+  drawn          Int
+  lost           Int
+  goalsFor       Int          @map("goals_for")
+  goalsAgainst   Int          @map("goals_against")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@unique([championshipId, teamId])
+  @@map("standings")
+}
+
+

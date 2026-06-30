@@ -1,0 +1,37 @@
+{
+  "name": "la-resenha-fc",
+  "version": "1.0.0",
+  "description": "Monorepo do projeto da disciplina",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web"
+  },
+  "keywords": [
+    "nestjs",
+    "nuxt",
+    "monorepo"
+  ],
+  "author": "Turma de Desenvolvimento Web",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/swagger": "^11.4.4",
+    "@prisma/client": "6.4.1",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "prisma": "6.4.1"
+  }
+}
