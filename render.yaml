@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: la-resenha-fc-api
+    env: node
+    plan: free
+    buildCommand: npm install && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build -w apps/api && npx prisma db push --schema=apps/api/prisma/schema.prisma
+    startCommand: node apps/api/dist/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION
+        value: 8h
