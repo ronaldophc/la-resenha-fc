@@ -15,7 +15,7 @@ describe('MatchesService', () => {
     location: 'Estádio Municipal',
     homeScore: 2,
     awayScore: 1,
-    championship: 'Copa Várzea',
+    championshipId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -27,6 +27,9 @@ describe('MatchesService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+    },
+    championship: {
+      findUnique: jest.fn(),
     },
   };
 
@@ -58,7 +61,6 @@ describe('MatchesService', () => {
         location: 'Estádio Municipal',
         homeScore: 2,
         awayScore: 1,
-        championship: 'Copa Várzea',
       };
 
       mockPrismaService.match.create.mockResolvedValue(mockMatch);
@@ -72,7 +74,10 @@ describe('MatchesService', () => {
           location: dto.location,
           homeScore: dto.homeScore,
           awayScore: dto.awayScore,
-          championship: dto.championship,
+          championshipId: null,
+        },
+        include: {
+          championship: true,
         },
       });
       expect(result).toEqual(mockMatch);
@@ -86,6 +91,9 @@ describe('MatchesService', () => {
       const result = await service.findAll();
 
       expect(prisma.match.findMany).toHaveBeenCalledWith({
+        include: {
+          championship: true,
+        },
         orderBy: { date: 'desc' },
       });
       expect(result).toEqual([mockMatch]);
@@ -100,6 +108,9 @@ describe('MatchesService', () => {
 
       expect(prisma.match.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
+        include: {
+          championship: true,
+        },
       });
       expect(result).toEqual(mockMatch);
     });
@@ -121,10 +132,18 @@ describe('MatchesService', () => {
 
       const result = await service.update(1, dto);
 
-      expect(prisma.match.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(prisma.match.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: {
+          championship: true,
+        },
+      });
       expect(prisma.match.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: { homeScore: 3 },
+        include: {
+          championship: true,
+        },
       });
       expect(result).toEqual(updatedMatch);
     });
@@ -143,7 +162,12 @@ describe('MatchesService', () => {
 
       await service.remove(1);
 
-      expect(prisma.match.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(prisma.match.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: {
+          championship: true,
+        },
+      });
       expect(prisma.match.delete).toHaveBeenCalledWith({ where: { id: 1 } });
     });
 
