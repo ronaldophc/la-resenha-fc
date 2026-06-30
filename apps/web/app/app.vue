@@ -1,11 +1,5 @@
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>
-
-<script setup lang="ts">
-const appConfig = useAppConfig();
-console.log('teste', appConfig);
-</script>

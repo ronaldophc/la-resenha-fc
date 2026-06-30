@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { TransformInterceptor } from './transform/transform.interceptor';
 import { HttpExceptionFilter } from './http-exception/http-exception.filter';
 import { PlayerNumberAlreadyInUseFilter } from './players/filters/player-number-already-in-use.filter';
@@ -10,6 +11,8 @@ import { writeFileSync } from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors();
 
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(
@@ -37,6 +40,8 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   writeFileSync('./swagger.json', JSON.stringify(document, null, 2));
 
-  await app.listen(process.env.PORT ?? 3000);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('PORT') ?? 3000;
+  await app.listen(port);
 }
 bootstrap();

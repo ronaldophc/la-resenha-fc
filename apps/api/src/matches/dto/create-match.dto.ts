@@ -48,11 +48,12 @@ export class CreateMatchDto {
   awayScore: number;
 
   @ApiProperty({
-    description: 'Nome do campeonato',
-    example: 'Copa UTFR 2026',
+    description: 'ID do campeonato associado',
+    example: 1,
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'O campeonato deve ser uma string válida.' })
-  championship?: string;
+  @IsInt({ message: 'O ID do campeonato deve ser um número inteiro.' })
+  @Type(() => Number)
+  championshipId?: number;
 }

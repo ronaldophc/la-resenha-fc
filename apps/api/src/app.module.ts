@@ -10,6 +10,8 @@ import { StandingsModule } from './standings/standings.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { UsersModule } from './users/users.module';
+import { TeamsModule } from './teams/teams.module';
+import { ChampionshipsModule } from './championships/championships.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { UsersModule } from './users/users.module';
     StandingsModule,
     PrismaModule,
     UsersModule,
+    TeamsModule,
+    ChampionshipsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

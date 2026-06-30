@@ -1045,6 +1045,325 @@
           "standings"
         ]
       }
+    },
+    "/teams": {
+      "get": {
+        "operationId": "TeamsController_findAll",
+        "parameters": [
+          {
+            "name": "filter",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de times retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todos os times cadastrados",
+        "tags": [
+          "teams"
+        ]
+      },
+      "post": {
+        "operationId": "TeamsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Time cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo time (Apenas ADMIN)",
+        "tags": [
+          "teams"
+        ]
+      }
+    },
+    "/teams/{id}": {
+      "get": {
+        "operationId": "TeamsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time encontrado"
+          },
+          "404": {
+            "description": "Time não encontrado"
+          }
+        },
+        "summary": "Retorna os detalhes de um time específico por id",
+        "tags": [
+          "teams"
+        ]
+      },
+      "patch": {
+        "operationId": "TeamsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Time atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Time não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um time (Apenas ADMIN)",
+        "tags": [
+          "teams"
+        ]
+      },
+      "delete": {
+        "operationId": "TeamsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Time removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Time não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um time por id (Apenas ADMIN)",
+        "tags": [
+          "teams"
+        ]
+      }
+    },
+    "/championships": {
+      "get": {
+        "operationId": "ChampionshipsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de campeonatos retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todos os campeonatos cadastrados",
+        "tags": [
+          "championships"
+        ]
+      },
+      "post": {
+        "operationId": "ChampionshipsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChampionshipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Campeonato cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo campeonato (Apenas ADMIN)",
+        "tags": [
+          "championships"
+        ]
+      }
+    },
+    "/championships/{id}": {
+      "get": {
+        "operationId": "ChampionshipsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campeonato encontrado"
+          },
+          "404": {
+            "description": "Campeonato não encontrado"
+          }
+        },
+        "summary": "Retorna os detalhes de um campeonato específico com classificação por id",
+        "tags": [
+          "championships"
+        ]
+      },
+      "patch": {
+        "operationId": "ChampionshipsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChampionshipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campeonato atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Campeonato não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um campeonato (Apenas ADMIN)",
+        "tags": [
+          "championships"
+        ]
+      },
+      "delete": {
+        "operationId": "ChampionshipsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Campeonato removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Campeonato não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um campeonato por id (Apenas ADMIN)",
+        "tags": [
+          "championships"
+        ]
+      }
     }
   },
   "info": {
@@ -1182,10 +1501,10 @@
             "example": 1,
             "minimum": 0
           },
-          "championship": {
-            "type": "string",
-            "description": "Nome do campeonato",
-            "example": "Copa UTFR 2026"
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato associado",
+            "example": 1
           }
         },
         "required": [
@@ -1230,10 +1549,15 @@
       "CreateStandingDto": {
         "type": "object",
         "properties": {
-          "championship": {
-            "type": "string",
-            "description": "Nome do campeonato",
-            "example": "Liga Amadora de Futebol 2026"
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato associado",
+            "example": 1
+          },
+          "teamId": {
+            "type": "number",
+            "description": "ID do time associado",
+            "example": 1
           },
           "position": {
             "type": "number",
@@ -1277,7 +1601,8 @@
           }
         },
         "required": [
-          "championship",
+          "championshipId",
+          "teamId",
           "position",
           "points",
           "played",
@@ -1291,10 +1616,15 @@
       "UpdateStandingDto": {
         "type": "object",
         "properties": {
-          "championship": {
-            "type": "string",
-            "description": "Nome do campeonato",
-            "example": "Liga Amadora de Futebol 2026"
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato associado",
+            "example": 1
+          },
+          "teamId": {
+            "type": "number",
+            "description": "ID do time associado",
+            "example": 1
           },
           "position": {
             "type": "number",
@@ -1336,18 +1666,73 @@
             "description": "Gols sofridos (contra)",
             "example": 4
           }
+        }
+      },
+      "CreateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do time",
+            "example": "La Resenha FC"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo/escudo do time",
+            "example": "https://exemplo.com/escudo.png"
+          }
         },
         "required": [
-          "championship",
-          "position",
-          "points",
-          "played",
-          "won",
-          "drawn",
-          "lost",
-          "goalsFor",
-          "goalsAgainst"
+          "name"
         ]
+      },
+      "UpdateTeamDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do time",
+            "example": "La Resenha FC"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo/escudo do time",
+            "example": "https://exemplo.com/escudo.png"
+          }
+        }
+      },
+      "CreateChampionshipDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Copa Várzea Curitiba 2026"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo do campeonato",
+            "example": "https://exemplo.com/logo-champ.png"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateChampionshipDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do campeonato",
+            "example": "Copa Várzea Curitiba 2026"
+          },
+          "logoUrl": {
+            "type": "string",
+            "description": "URL do logo do campeonato",
+            "example": "https://exemplo.com/logo-champ.png"
+          }
+        }
       }
     }
   }
