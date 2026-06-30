@@ -314,7 +314,7 @@ const loadApiData = async () => {
           opponent: future.opponent,
           location: future.location,
           date: future.date,
-          championship: future.championship || 'Amistoso Especial'
+          championship: future.championship?.name || future.championship || 'Amistoso Especial'
         };
       } else {
         nextMatch.value = null;
