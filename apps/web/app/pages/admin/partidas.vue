@@ -24,11 +24,27 @@
         <form @submit.prevent="handleSubmit" class="match-form">
           <div class="form-grid">
             <div class="form-group">
-              <label for="opponent">Nome do Adversário *</label>
+              <label for="opponentSelect">Adversário *</label>
+              <select 
+                v-model="opponentSelectValue" 
+                id="opponentSelect" 
+                required
+                class="form-input"
+              >
+                <option value="" disabled>Selecione um adversário</option>
+                <option v-for="team in filteredTeams" :key="team.id" :value="team.name">
+                  {{ team.name }}
+                </option>
+                <option value="custom">Outro (Digitar nome...)</option>
+              </select>
+            </div>
+
+            <div v-if="opponentSelectValue === 'custom'" class="form-group">
+              <label for="opponentCustom">Nome do Adversário *</label>
               <input 
-                v-model="form.opponent" 
+                v-model="customOpponentName" 
                 type="text" 
-                id="opponent" 
+                id="opponentCustom" 
                 placeholder="Ex: Real Madrid da Várzea" 
                 required
                 class="form-input"
@@ -173,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
@@ -187,6 +203,11 @@ definePageMeta({
 useHead({
   title: 'Gerenciar Partidas - La Resenha FC',
 });
+
+interface Team {
+  id: number;
+  name: string;
+}
 
 interface Championship {
   id: number;
@@ -214,6 +235,17 @@ const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
 const championshipsList = ref<Championship[]>([]);
+const teamsList = ref<Team[]>([]);
+
+const opponentSelectValue = ref('');
+const customOpponentName = ref('');
+
+const filteredTeams = computed(() => {
+  return teamsList.value.filter(team => {
+    const name = team.name.toLowerCase();
+    return !name.includes('la resenha');
+  });
+});
 
 const form = ref({
   opponent: '',
@@ -243,6 +275,15 @@ const loadChampionships = async () => {
     championshipsList.value = Array.isArray(res) ? res : (res?.data || []);
   } catch (error) {
     console.error('Erro ao carregar campeonatos para select:', error);
+  }
+};
+
+const loadTeams = async () => {
+  try {
+    const res = await request<any>('/teams');
+    teamsList.value = Array.isArray(res) ? res : (res?.data || []);
+  } catch (error) {
+    console.error('Erro ao carregar times para select:', error);
   }
 };
 
@@ -277,6 +318,8 @@ const resetForm = () => {
     homeScore: 0,
     awayScore: 0
   };
+  opponentSelectValue.value = '';
+  customOpponentName.value = '';
   isEditing.value = false;
   editingId.value = null;
 };
@@ -313,6 +356,18 @@ const startEdit = (match: Match) => {
     homeScore: match.homeScore,
     awayScore: match.awayScore
   };
+
+  // Mapeia o nome do adversário de volta para o select ou custom input
+  const matchOpponent = match.opponent;
+  const teamExists = filteredTeams.value.some(t => t.name.toLowerCase() === matchOpponent.toLowerCase());
+  if (teamExists) {
+    opponentSelectValue.value = matchOpponent;
+    customOpponentName.value = '';
+  } else {
+    opponentSelectValue.value = 'custom';
+    customOpponentName.value = matchOpponent;
+  }
+
   editingId.value = match.id;
   isEditing.value = true;
   showForm.value = true;
@@ -329,8 +384,12 @@ const handleSubmit = async () => {
   feedback.value = null;
 
   try {
+    const opponentName = opponentSelectValue.value === 'custom'
+      ? customOpponentName.value
+      : opponentSelectValue.value;
+
     const payload = {
-      opponent: form.value.opponent,
+      opponent: opponentName,
       championshipId: form.value.championshipId ? Number(form.value.championshipId) : null,
       date: new Date(form.value.date).toISOString(),
       location: form.value.location,
@@ -383,6 +442,7 @@ const confirmDelete = async (match: Match) => {
 onMounted(() => {
   loadMatches();
   loadChampionships();
+  loadTeams();
 });
 </script>
 

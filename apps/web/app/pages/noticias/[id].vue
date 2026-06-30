@@ -35,7 +35,7 @@
       <!-- Imagem de Destaque -->
       <div class="article-image-wrapper">
         <img 
-          :src="article.imageUrl || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop'" 
+          :src="getImageUrl(article.imageUrl) || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop'" 
           :alt="article.title"
           class="article-image"
           @error="setDefaultImage"
@@ -43,12 +43,7 @@
       </div>
 
       <!-- Corpo do Artigo -->
-      <div class="article-content">
-        <!-- Processamento de parágrafos simples -->
-        <p v-for="(paragraph, idx) in formattedParagraphs" :key="idx" class="article-paragraph">
-          {{ paragraph }}
-        </p>
-      </div>
+      <div class="article-content" v-html="article.content"></div>
 
       <!-- Rodapé do Artigo / Call to Action -->
       <footer class="article-footer">
@@ -80,29 +75,42 @@ interface Article {
 
 const route = useRoute();
 const articleId = route.params.id;
-const { request } = useApi();
+const { request, apiBase } = useApi();
 
 const article = ref<Article | null>(null);
 const loading = ref(true);
 const error = ref(false);
 
+const getImageUrl = (url: string | undefined | null) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const base = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return `${base}${path}`;
+};
+
 // SEO e Metatags dinâmicos
-useHead(() => ({
-  title: article.value ? `${article.value.title} - La Resenha FC` : 'Carregando Notícia... - La Resenha FC',
-  meta: [
-    { 
-      name: 'description', 
-      content: article.value ? article.value.content.substring(0, 150) + '...' : 'Leia a notícia completa no portal oficial do La Resenha FC.' 
-    }
-  ]
-}));
+useHead(() => {
+  const plainText = article.value?.content ? article.value.content.replace(/<[^>]*>/g, '') : '';
+  return {
+    title: article.value ? `${article.value.title} - La Resenha FC` : 'Carregando Notícia... - La Resenha FC',
+    meta: [
+      { 
+        name: 'description', 
+        content: plainText ? (plainText.substring(0, 150) + '...') : 'Leia a notícia completa no portal oficial do La Resenha FC.' 
+      }
+    ]
+  };
+});
 
 const loadArticle = async () => {
   loading.value = true;
   error.value = false;
   try {
-    const res = await request<Article>(`/news/${articleId}`);
-    article.value = res;
+    const res = await request<any>(`/news/${articleId}`);
+    article.value = res.data || res;
   } catch (err) {
     console.error('Erro ao carregar notícia:', err);
     error.value = true;
@@ -283,12 +291,17 @@ onMounted(() => {
   max-height: 480px;
   overflow: hidden;
   border-bottom: 4px solid var(--color-asphalt);
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .article-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 480px;
+  height: auto;
+  object-fit: contain;
 }
 
 .article-content {

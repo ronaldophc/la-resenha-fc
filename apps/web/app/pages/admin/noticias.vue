@@ -63,14 +63,32 @@
 
             <div class="form-group form-group--full">
               <label for="content">Conteúdo da Notícia *</label>
-              <textarea 
-                v-model="form.content" 
-                id="content" 
-                placeholder="Escreva aqui o corpo da matéria..." 
-                rows="10"
-                required
-                class="form-input form-textarea"
-              ></textarea>
+              <ClientOnly>
+                <Editor 
+                  v-model="form.content" 
+                  tinymce-script-src="/tinymce/tinymce.min.js"
+                  :init="{
+                    height: 400,
+                    menubar: false,
+                    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+                    toolbar: 'undo redo | blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                    skin: 'oxide-dark',
+                    content_css: 'dark',
+                    branding: false,
+                    license_key: 'gpl'
+                  }"
+                />
+                <template #fallback>
+                  <textarea 
+                    v-model="form.content" 
+                    id="content" 
+                    placeholder="Carregando editor..." 
+                    rows="10"
+                    readonly
+                    class="form-input form-textarea"
+                  ></textarea>
+                </template>
+              </ClientOnly>
               <span class="char-counter">
                 Mínimo de 10 caracteres (Atual: {{ form.content.length }})
               </span>
@@ -139,6 +157,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
+import Editor from '@tinymce/tinymce-vue';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
@@ -246,8 +265,9 @@ const formatDate = (dateStr: string) => {
 };
 
 const getExcerpt = (text: string, length = 120) => {
-  if (text.length <= length) return text;
-  return text.slice(0, length) + '...';
+  const plainText = text ? text.replace(/<[^>]*>/g, '') : '';
+  if (plainText.length <= length) return plainText;
+  return plainText.slice(0, length) + '...';
 };
 
 const handleImageError = (e: Event) => {
