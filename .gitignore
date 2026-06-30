@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 
 # Design files
 docs/design/
+
+# TinyMCE local assets
+apps/web/public/tinymce/

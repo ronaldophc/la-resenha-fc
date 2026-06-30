@@ -71,7 +71,8 @@
               <!-- Time da Casa: La Resenha FC -->
               <div class="match-card__team match-card__team--home">
                 <div class="match-card__logo-wrapper match-card__logo-wrapper--home">
-                  <span class="material-symbols-outlined">shield</span>
+                  <img v-if="match.homeLogo" :src="match.homeLogo" alt="La Resenha" class="match-card__logo-img" />
+                  <span v-else class="material-symbols-outlined">shield</span>
                 </div>
                 <span class="match-card__team-name">La Resenha</span>
               </div>
@@ -97,7 +98,8 @@
               <!-- Time Visitante -->
               <div class="match-card__team match-card__team--away">
                 <div class="match-card__logo-wrapper match-card__logo-wrapper--away">
-                  <span class="material-symbols-outlined">sports_soccer</span>
+                  <img v-if="match.opponentLogo" :src="match.opponentLogo" :alt="match.opponent" class="match-card__logo-img" />
+                  <span v-else class="material-symbols-outlined">sports_soccer</span>
                 </div>
                 <span class="match-card__team-name">{{ match.opponent }}</span>
               </div>
@@ -173,7 +175,8 @@
                   </div>
                 </td>
                 <td class="team-cell">
-                  <span class="material-symbols-outlined team-cell__icon">
+                  <img v-if="row.logoUrl" :src="row.logoUrl" :alt="row.teamName" class="team-cell__logo-img" />
+                  <span v-else class="material-symbols-outlined team-cell__icon">
                     {{ row.teamName === 'La Resenha' ? 'shield' : 'sports_soccer' }}
                   </span>
                   <span class="team-cell__name">{{ row.teamName }}</span>
@@ -235,6 +238,8 @@ interface Match {
   homeScore: number;
   awayScore: number;
   championship: string | null;
+  opponentLogo?: string | null;
+  homeLogo?: string | null;
 }
 
 interface Standing {
@@ -242,6 +247,7 @@ interface Standing {
   championship: string;
   position: number;
   teamName: string;
+  logoUrl?: string | null;
   points: number;
   played: number;
   won: number;
@@ -336,10 +342,24 @@ const filteredStandings = computed(() => {
 
 // --- DATA FETCHING ---
 const loadData = async () => {
+  // 0. Carregar times para obter os logos
+  const teamLogoMap = new Map<string, string | null>();
+  try {
+    const apiTeams = await request<any>('/teams');
+    const teamsList = Array.isArray(apiTeams) ? apiTeams : (apiTeams?.data || []);
+    teamsList.forEach((t: any) => {
+      if (t.name) {
+        teamLogoMap.set(t.name.toLowerCase(), t.logoUrl || null);
+      }
+    });
+  } catch (error) {
+    console.warn('API /teams falhou ou indisponível.');
+  }
+
   // 1. Carregar partidas da API
   try {
     const apiMatches = await request<any>('/matches');
-    let dynamicMatches: Match[] = [];
+    let dynamicMatches: any[] = [];
     
     // Tratando envelopes comuns de paginação/resposta
     if (Array.isArray(apiMatches)) {
@@ -348,7 +368,17 @@ const loadData = async () => {
       dynamicMatches = apiMatches.data;
     }
 
-    matches.value = dynamicMatches;
+    matches.value = dynamicMatches.map(m => ({
+      id: m.id,
+      date: m.date,
+      opponent: m.opponent,
+      location: m.location,
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+      championship: m.championship?.name || m.championship || null,
+      opponentLogo: teamLogoMap.get(m.opponent.toLowerCase()) || null,
+      homeLogo: teamLogoMap.get('la resenha') || teamLogoMap.get('la resenha fc') || null
+    }));
   } catch (error) {
     console.warn('API /matches falhou ou indisponível.');
     matches.value = [];
@@ -357,7 +387,7 @@ const loadData = async () => {
   // 2. Carregar classificação da API
   try {
     const apiStandings = await request<any>('/standings');
-    let dynamicStandings: Standing[] = [];
+    let dynamicStandings: any[] = [];
     
     if (Array.isArray(apiStandings)) {
       dynamicStandings = apiStandings;
@@ -366,19 +396,24 @@ const loadData = async () => {
     }
 
     // Mapear campos da API para correspondência ideal com a view
-    const mapped: Standing[] = dynamicStandings.map(s => ({
-      id: s.id,
-      championship: s.championship,
-      position: s.position,
-      teamName: s.teamName || s.team_name || (s.id === 1 ? 'La Resenha' : `Adversário ${s.id}`),
-      points: s.points,
-      played: s.played,
-      won: s.won,
-      drawn: s.drawn,
-      lost: s.lost,
-      goalsFor: s.goalsFor || s.goals_for || 0,
-      goalsAgainst: s.goalsAgainst || s.goals_against || 0
-    }));
+    const mapped: Standing[] = dynamicStandings.map(s => {
+      const teamName = s.team?.name || s.teamName || s.team_name || (s.id === 1 ? 'La Resenha' : `Adversário ${s.id}`);
+      const logoUrl = s.team?.logoUrl || teamLogoMap.get(teamName.toLowerCase()) || null;
+      return {
+        id: s.id,
+        championship: s.championship?.name || s.championship || '',
+        position: s.position,
+        teamName,
+        logoUrl,
+        points: s.points,
+        played: s.played,
+        won: s.won,
+        drawn: s.drawn,
+        lost: s.lost,
+        goalsFor: s.goalsFor || s.goals_for || 0,
+        goalsAgainst: s.goalsAgainst || s.goals_against || 0
+      };
+    });
 
     mapped.sort((a, b) => a.position - b.position);
     standings.value = mapped;
@@ -453,15 +488,6 @@ onMounted(async () => {
   }
   .standings-column {
     grid-column: span 5;
-  }
-}
-
-@media (min-width: 1200px) {
-  .matches-column {
-    grid-column: span 8;
-  }
-  .standings-column {
-    grid-column: span 4;
   }
 }
 
@@ -892,7 +918,7 @@ onMounted(async () => {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 480px; /* Impede aperto excessivo */
+  min-width: 320px;
 }
 
 .standings-table th {
@@ -903,12 +929,12 @@ onMounted(async () => {
   letter-spacing: 0.05em;
   background-color: var(--color-primary-container);
   color: var(--color-on-primary-container);
-  padding: 12px 16px;
+  padding: 12px 8px;
   border-bottom: 4px solid var(--color-outline-variant);
 }
 
 .standings-table td {
-  padding: 12px 16px;
+  padding: 12px 8px;
   font-family: 'Public Sans', sans-serif;
   font-size: 0.95rem;
   border-bottom: 2px solid var(--color-outline-variant);
@@ -982,7 +1008,7 @@ onMounted(async () => {
 .team-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   height: 100%;
 }
 
@@ -997,6 +1023,21 @@ onMounted(async () => {
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-goal-white);
+}
+
+.match-card__logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.team-cell__logo-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 50%;
+  margin-right: 0;
 }
 
 /* Utilitários de Texto */

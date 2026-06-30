@@ -15,7 +15,7 @@
         <h1 class="hero-title">
           RESPEITA A NOSSA HISTÓRIA
         </h1>
-        <p class="hero-subtitle">O Futsal de Raiz mais tradicional da região</p>
+        <p class="hero-subtitle">O mais tradicional da região</p>
       </div>
     </section>
 
@@ -38,7 +38,8 @@
             <div class="match-vs-row">
               <div class="team-box">
                 <div class="team-icon-wrapper team-home">
-                  <span class="material-symbols-outlined">shield</span>
+                  <img v-if="getTeamLogo('La Resenha')" :src="getTeamLogo('La Resenha')" alt="La Resenha" class="team-logo-img" />
+                  <span v-else class="material-symbols-outlined">shield</span>
                 </div>
                 <span class="team-title">La Resenha</span>
               </div>
@@ -47,7 +48,8 @@
               
               <div class="team-box">
                 <div class="team-icon-wrapper team-away">
-                  <span class="material-symbols-outlined">sports_soccer</span>
+                  <img v-if="getTeamLogo(nextMatch.opponent)" :src="getTeamLogo(nextMatch.opponent)" :alt="nextMatch.opponent" class="team-logo-img" />
+                  <span v-else class="material-symbols-outlined">sports_soccer</span>
                 </div>
                 <span class="team-title">{{ nextMatch.opponent }}</span>
               </div>
@@ -92,7 +94,7 @@
                 <img 
                   class="news-large-image" 
                   alt="Futsal shoes on court floor" 
-                  :src="newsList[0].imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDdAqTLGCOvKqUWgsFk_ssnOVImKofzs6MXVNV-XdhIlQYh2u6whLgM7mK6PeOEzmTk3A1r3olmNES7TZXgan4QZQt8cQrw3lGkq9vhict1xtvbdqN05g3IVP7qTJL2z6SQZyhiUMjYOFy1n9IsBnPQdrbi2ZgiURyfEQekXXPut5s64vpta-YEZkA22mIQ2ilHj02IjysyZ3NgngBNrrh7CvJgcX6CrKXFkoUS7yGi3boX3Hym_Q4O6D4XNZus6nYBFs9_7-7p5-k'"
+                  :src="getImageUrl(newsList[0].imageUrl) || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDdAqTLGCOvKqUWgsFk_ssnOVImKofzs6MXVNV-XdhIlQYh2u6whLgM7mK6PeOEzmTk3A1r3olmNES7TZXgan4QZQt8cQrw3lGkq9vhict1xtvbdqN05g3IVP7qTJL2z6SQZyhiUMjYOFy1n9IsBnPQdrbi2ZgiURyfEQekXXPut5s64vpta-YEZkA22mIQ2ilHj02IjysyZ3NgngBNrrh7CvJgcX6CrKXFkoUS7yGi3boX3Hym_Q4O6D4XNZus6nYBFs9_7-7p5-k'"
                 />
               </div>
               <div class="news-large-content">
@@ -118,7 +120,7 @@
                   <img 
                     class="news-small-image" 
                     alt="Futsal court play close up" 
-                    :src="newsList[1].imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCS77fmCK80jT9sxMhBjEojeH5HRdsHv11RTU525zbHoKckINqoxkUkDWFpIlptQPRjbcpqdb_-opgSCKYotqrJ01M0OwzKighTermNMoyNR2RdqWibcEEzsvP0eE30gEQ_4S355CXGaijlACI8bCex_XxyfG-l7TA5Ufr6KfdapOEteym6LV4gWKgI9BROXKhv30ExVQ19IXg0zItAj8EFmotIUmWz09SMhHexrBknaiy7tqoEFZ49U5SC4W5_GZ7bEoZjkNg_p7w'"
+                    :src="getImageUrl(newsList[1].imageUrl) || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCS77fmCK80jT9sxMhBjEojeH5HRdsHv11RTU525zbHoKckINqoxkUkDWFpIlptQPRjbcpqdb_-opgSCKYotqrJ01M0OwzKighTermNMoyNR2RdqWibcEEzsvP0eE30gEQ_4S355CXGaijlACI8bCex_XxyfG-l7TA5Ufr6KfdapOEteym6LV4gWKgI9BROXKhv30ExVQ19IXg0zItAj8EFmotIUmWz09SMhHexrBknaiy7tqoEFZ49U5SC4W5_GZ7bEoZjkNg_p7w'"
                   />
                 </div>
                 <div class="news-small-content">
@@ -137,7 +139,7 @@
                   <img 
                     class="news-small-image" 
                     alt="Vintage coach profile portrait" 
-                    :src="newsList[2].imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBr42OmetF_wU1vNZq8r9ERc6d1jSPl4ZkcKFF08CnTuXaqt71C4qiCCI6xGkZ2nBvcK5GsocaHZ6FrMnbFI1qGcxjwWs7qprtJTzc-21cm5aE0yHz1rwaOniHHvHNbtFHWcNqpnHaj0JoFwMLGgV3pi61Ku9HzZq62pRm-O89tN0KgvzWANPAjOSpBD3h6tBtAY7wpf1S1Zrn20SW2JwIODeUox-4m2qb4Qbm7fGBXGOTwJWwXxqJWGaYKvndi-9s4dZTe8zqyMVE'"
+                    :src="getImageUrl(newsList[2].imageUrl) || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBr42OmetF_wU1vNZq8r9ERc6d1jSPl4ZkcKFF08CnTuXaqt71C4qiCCI6xGkZ2nBvcK5GsocaHZ6FrMnbFI1qGcxjwWs7qprtJTzc-21cm5aE0yHz1rwaOniHHvHNbtFHWcNqpnHaj0JoFwMLGgV3pi61Ku9HzZq62pRm-O89tN0KgvzWANPAjOSpBD3h6tBtAY7wpf1S1Zrn20SW2JwIODeUox-4m2qb4Qbm7fGBXGOTwJWwXxqJWGaYKvndi-9s4dZTe8zqyMVE'"
                   />
                 </div>
                 <div class="news-small-content">
@@ -190,7 +192,7 @@ useHead({
   ]
 });
 
-const { request } = useApi();
+const { request, apiBase } = useApi();
 
 // --- STATE VARIABLES ---
 
@@ -200,6 +202,8 @@ const nextMatch = ref<{
   date: string;
   championship: string;
 } | null>(null);
+
+const teams = ref<any[]>([]);
 
 const newsList = ref<Array<{
   id: number | string;
@@ -243,10 +247,27 @@ const formatRelativeTime = (dateString: string) => {
   }
 };
 
+const getImageUrl = (url: string | undefined | null) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const base = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return `${base}${path}`;
+};
+
+const getTeamLogo = (teamName: string) => {
+  if (!teamName) return '';
+  const team = teams.value.find(t => t.name.toLowerCase() === teamName.toLowerCase());
+  return getImageUrl(team?.logoUrl);
+};
+
 const truncateText = (text: string, length: number) => {
   if (!text) return '';
-  if (text.length <= length) return text;
-  return text.substring(0, length) + '...';
+  const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (cleanText.length <= length) return cleanText;
+  return cleanText.substring(0, length) + '...';
 };
 
 // --- ACTION HANDLERS ---
@@ -273,6 +294,13 @@ const handleVerLocalizacao = () => {
 // --- DATA FETCHING (API INTEGRATION) ---
 
 const loadApiData = async () => {
+  try {
+    const apiTeams = await request<any>('/teams');
+    teams.value = Array.isArray(apiTeams) ? apiTeams : (apiTeams?.data || []);
+  } catch (error) {
+    console.warn('API /teams falhou ou indisponível.');
+  }
+
   try {
     const matchesResponse = await request<any>('/matches');
     const matchesList = Array.isArray(matchesResponse) ? matchesResponse : (matchesResponse?.data || []);
@@ -513,6 +541,15 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   border: 2px solid var(--color-asphalt);
+}
+
+.team-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  background-color: var(--color-surface-container-highest);
+  padding: 4px;
 }
 
 .team-icon-wrapper.team-home {

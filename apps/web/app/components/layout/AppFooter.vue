@@ -2,15 +2,12 @@
   <footer class="app-footer">
     <div class="footer-brand">La Resenha FC</div>
     <div class="footer-links">
-      <NuxtLink to="/" class="footer-link">Sobre</NuxtLink>
-      <NuxtLink to="/" class="footer-link">Contato</NuxtLink>
-      <NuxtLink to="/" class="footer-link">Privacidade</NuxtLink>
       <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="footer-link">
         {{ isAuthenticated ? 'Painel' : 'Admin' }}
       </NuxtLink>
     </div>
     <div class="footer-copyright">
-      © {{ currentYear }} Futsal de Raiz - O Brilho da Quadra
+      © {{ currentYear }} La Resenha FC
     </div>
     <div class="footer-icons">
       <span class="material-symbols-outlined text-tertiary" title="Futebol de Salão">sports_soccer</span>

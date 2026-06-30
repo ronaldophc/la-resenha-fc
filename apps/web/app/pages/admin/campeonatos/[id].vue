@@ -343,8 +343,8 @@ const showFeedback = (type: 'success' | 'error', message: string) => {
 const loadChampionshipDetails = async () => {
   loadingChampionship.value = true;
   try {
-    const res = await request<ChampionshipDetail>(`/championships/${champId}`);
-    championship.value = res;
+    const res = await request<any>(`/championships/${champId}`);
+    championship.value = res?.data || res;
     
     // Ordena os standings por posição
     if (championship.value && championship.value.standings) {
