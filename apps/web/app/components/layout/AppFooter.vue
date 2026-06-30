@@ -1,44 +1,21 @@
 <template>
   <footer class="app-footer">
-    <div class="container footer-container">
-      <div class="footer-grid">
-        <!-- Brand Info -->
-        <div class="footer-brand">
-          <h4>La Resenha FC</h4>
-          <p>O clube mais temido da várzea curitibana. Futebol jogado na raça, poeira no pulmão e resenha garantida com cerveja gelada.</p>
-        </div>
-        
-        <!-- Quick Links -->
-        <div class="footer-links">
-          <h5>Navegação</h5>
-          <ul>
-            <li><NuxtLink to="/">Home</NuxtLink></li>
-            <li><NuxtLink to="/elenco">Elenco</NuxtLink></li>
-            <li><NuxtLink to="/resultados">Resultados</NuxtLink></li>
-            <li><NuxtLink to="/tabela">Classificação</NuxtLink></li>
-          </ul>
-        </div>
-        
-        <!-- Admin Entry -->
-        <div class="footer-admin">
-          <h5>Administração</h5>
-          <p>Área restrita para a comissão técnica e diretoria do La Resenha FC.</p>
-          <VButton
-            :to="isAuthenticated ? '/admin' : '/admin/login'"
-            variant="outline"
-            size="sm"
-          >
-            {{ isAuthenticated ? 'Acessar Painel' : 'Área do Diretor' }}
-          </VButton>
-        </div>
-      </div>
+    <div class="footer-brand">La Resenha FC</div>
+    <div class="footer-links">
+      <NuxtLink to="/" class="footer-link">Sobre</NuxtLink>
+      <NuxtLink to="/" class="footer-link">Contato</NuxtLink>
+      <NuxtLink to="/" class="footer-link">Privacidade</NuxtLink>
+      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="footer-link">
+        {{ isAuthenticated ? 'Painel' : 'Admin' }}
+      </NuxtLink>
     </div>
-    
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-      <div class="container">
-        <p>© {{ currentYear }} La Resenha FC. Todos os direitos reservados. UTFPR - Tópicos Especiais em Programação.</p>
-      </div>
+    <div class="footer-copyright">
+      © {{ currentYear }} Futsal de Raiz - O Brilho da Quadra
+    </div>
+    <div class="footer-icons">
+      <span class="material-symbols-outlined text-tertiary" title="Futebol de Salão">sports_soccer</span>
+      <span class="material-symbols-outlined text-tertiary" title="Quadra">door_front</span>
+      <span class="material-symbols-outlined text-tertiary" title="Comunidade">groups</span>
     </div>
   </footer>
 </template>
@@ -46,7 +23,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useAuth } from '#imports';
-import VButton from '~/components/ui/VButton.vue';
 
 const { isAuthenticated } = useAuth();
 const currentYear = computed(() => new Date().getFullYear());
@@ -54,66 +30,75 @@ const currentYear = computed(() => new Date().getFullYear());
 
 <style scoped>
 .app-footer {
-  background-color: #0e0e0e;
-  border-top: var(--border-width-thick) solid var(--color-asphalt);
-  padding: 48px 0 0 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px; /* gap-4 = 16px */
+  padding: 48px var(--space-margin-mobile); /* py-12 = 48px */
+  background-color: var(--color-surface-container-lowest);
+  border-top: 4px solid var(--color-outline-variant);
   margin-top: auto;
 }
 
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-  padding-bottom: 40px;
-}
-
 @media (min-width: 768px) {
-  .footer-grid {
-    grid-template-columns: 2fr 1fr 2fr;
+  .app-footer {
+    padding: 48px var(--space-margin-desktop);
   }
 }
 
-.footer-brand h4, .footer-links h5, .footer-admin h5 {
+.footer-brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem; /* text-headline-md = 24px */
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
   color: var(--color-goal-white);
-  margin-bottom: 16px;
-  font-size: 1.25rem;
+  letter-spacing: -0.05em; /* tracking-tighter */
+  margin-bottom: 16px; /* mb-4 = 16px */
 }
 
-.footer-brand p, .footer-admin p {
-  font-size: 0.95rem;
-  color: #a3a3a3;
-  margin-bottom: 16px;
-  line-height: 1.6;
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 32px; /* gap-8 = 32px */
+  margin-bottom: 32px; /* mb-8 = 32px */
 }
 
-.footer-links ul {
-  list-style: none;
-}
-
-.footer-links li {
-  margin-bottom: 8px;
-}
-
-.footer-links a {
-  color: #a3a3a3;
-  font-size: 0.95rem;
+.footer-link {
+  color: var(--color-on-surface-variant);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem; /* font-label-lg = 16px */
+  font-weight: 600;
+  text-transform: uppercase;
   text-decoration: none;
+  opacity: 0.8;
+  transition: all 0.15s ease;
 }
 
-.footer-links a:hover {
-  color: var(--color-primary);
+.footer-link:hover {
+  opacity: 1;
+  color: var(--color-goal-white);
+  text-decoration: underline;
 }
 
-.footer-bottom {
-  background-color: var(--color-asphalt);
-  padding: 20px 0;
+.footer-copyright {
+  font-family: 'Public Sans', sans-serif;
+  font-size: 1rem; /* font-body-md = 16px */
+  color: var(--color-goal-white);
+  opacity: 0.6;
   text-align: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.footer-bottom p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #737373;
+.footer-icons {
+  margin-top: 16px; /* mt-4 = 16px */
+  display: flex;
+  gap: 16px; /* gap-4 = 16px */
+}
+
+.footer-icons .material-symbols-outlined {
+  color: var(--color-tertiary);
+  font-size: 24px;
 }
 </style>

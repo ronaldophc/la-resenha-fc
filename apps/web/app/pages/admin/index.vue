@@ -13,7 +13,7 @@
         <div class="stat-icon">👥</div>
         <div class="stat-content">
           <span class="stat-label">Jogadores Cadastrados</span>
-          <span class="stat-value">--</span>
+          <span class="stat-value">{{ playersCount }}</span>
         </div>
       </VCard>
 
@@ -21,7 +21,7 @@
         <div class="stat-icon">⚽</div>
         <div class="stat-content">
           <span class="stat-label">Partidas Registradas</span>
-          <span class="stat-value">--</span>
+          <span class="stat-value">{{ matchesCount }}</span>
         </div>
       </VCard>
 
@@ -29,7 +29,7 @@
         <div class="stat-icon">🏆</div>
         <div class="stat-content">
           <span class="stat-label">Campeonatos Ativos</span>
-          <span class="stat-value">--</span>
+          <span class="stat-value">{{ championshipsCount }}</span>
         </div>
       </VCard>
     </div>
@@ -40,15 +40,17 @@
         Esta área administrativa está totalmente protegida por rotas do lado do servidor (SSR-safe middleware) e do lado do cliente. Os dados do usuário logado foram carregados com sucesso a partir da API NestJS.
       </p>
       <p class="architecture-note">
-        Configure novas rotas dentro do diretório <code>app/pages/admin/</code> para expandir o gerenciamento do elenco, resultados, tabela e notícias.
+        Use as opções no menu lateral para gerenciar o elenco, resultados das partidas, tabela de classificação e notícias. Todas as alterações se refletirão instantaneamente no site público.
       </p>
     </VCard>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useAuth } from '~/composables/useAuth';
+import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
 
 // Define o layout administrativo e o middleware de autenticação obrigatória
@@ -62,6 +64,47 @@ useHead({
 });
 
 const { user } = useAuth();
+const { request } = useApi();
+
+const playersCount = ref<number | string>('--');
+const matchesCount = ref<number | string>('--');
+const championshipsCount = ref<number | string>('--');
+
+const loadStats = async () => {
+  try {
+    const playersRes = await request<any>('/players');
+    const playersList = Array.isArray(playersRes) ? playersRes : (playersRes?.data || []);
+    playersCount.value = playersList.length;
+  } catch (error) {
+    console.error('Erro ao carregar jogadores:', error);
+    playersCount.value = 0;
+  }
+
+  try {
+    const matchesRes = await request<any>('/matches');
+    const matchesList = Array.isArray(matchesRes) ? matchesRes : (matchesRes?.data || []);
+    matchesCount.value = matchesList.length;
+  } catch (error) {
+    console.error('Erro ao carregar partidas:', error);
+    matchesCount.value = 0;
+  }
+
+  try {
+    const standingsRes = await request<any>('/standings');
+    const standingsList = Array.isArray(standingsRes) ? standingsRes : (standingsRes?.data || []);
+    
+    // Contar campeonatos únicos
+    const uniqueChamps = new Set(standingsList.map((s: any) => s.championship).filter(Boolean));
+    championshipsCount.value = uniqueChamps.size || 1;
+  } catch (error) {
+    console.error('Erro ao carregar classificações:', error);
+    championshipsCount.value = 1;
+  }
+};
+
+onMounted(() => {
+  loadStats();
+});
 </script>
 
 <style scoped>

@@ -31,8 +31,11 @@
           <NuxtLink to="/admin/noticias" class="sidebar-item" active-class="sidebar-active">
             📰 Gerenciar Notícias
           </NuxtLink>
-          <NuxtLink to="/admin/classificacao" class="sidebar-item" active-class="sidebar-active">
-            🏆 Classificação (Tabela)
+          <NuxtLink to="/admin/campeonatos" class="sidebar-item" active-class="sidebar-active">
+            🏆 Campeonatos
+          </NuxtLink>
+          <NuxtLink to="/admin/times" class="sidebar-item" active-class="sidebar-active">
+            🛡️ Gerenciar Times
           </NuxtLink>
           <div class="sidebar-separator"></div>
           <NuxtLink to="/" class="sidebar-item sidebar-back-link">

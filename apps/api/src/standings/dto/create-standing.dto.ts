@@ -1,14 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateStandingDto {
   @ApiProperty({
-    description: 'Nome do campeonato',
-    example: 'Liga Amadora de Futebol 2026',
+    description: 'ID do campeonato associado',
+    example: 1,
   })
-  @IsString()
-  @IsNotEmpty()
-  championship: string;
+  @IsInt()
+  @IsNotEmpty({ message: 'O ID do campeonato é obrigatório.' })
+  @Type(() => Number)
+  championshipId: number;
+
+  @ApiProperty({
+    description: 'ID do time associado',
+    example: 1,
+  })
+  @IsInt()
+  @IsNotEmpty({ message: 'O ID do time é obrigatório.' })
+  @Type(() => Number)
+  teamId: number;
 
   @ApiProperty({
     description: 'Posição na tabela de classificação',
@@ -16,6 +27,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   position: number;
 
   @ApiProperty({
@@ -24,6 +36,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   points: number;
 
   @ApiProperty({
@@ -32,6 +45,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   played: number;
 
   @ApiProperty({
@@ -40,6 +54,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   won: number;
 
   @ApiProperty({
@@ -48,6 +63,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   drawn: number;
 
   @ApiProperty({
@@ -56,6 +72,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   lost: number;
 
   @ApiProperty({
@@ -64,6 +81,7 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   goalsFor: number;
 
   @ApiProperty({
@@ -72,5 +90,6 @@ export class CreateStandingDto {
   })
   @IsInt()
   @Min(0)
+  @Type(() => Number)
   goalsAgainst: number;
 }

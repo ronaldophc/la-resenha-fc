@@ -1,6 +1,7 @@
 export interface Standing {
   id: number;
   championship: string;
+  teamName: string;
   position: number;
   points: number;
   played: number;

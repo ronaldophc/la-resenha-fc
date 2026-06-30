@@ -30,13 +30,13 @@ export const useAuth = () => {
    */
   const login = async (credentials: { email: string; password?: string }) => {
     try {
-      const response = await request<{ data: { token: string; user: User } }>('/auth/login', {
+      const response = await request<{ data: { accessToken?: string; token?: string; user: User } }>('/auth/login', {
         method: 'POST',
         body: credentials,
       });
 
       if (response && response.data) {
-        token.value = response.data.token;
+        token.value = response.data.accessToken || response.data.token || null;
         user.value = response.data.user;
         await navigateTo('/admin');
         return { success: true };

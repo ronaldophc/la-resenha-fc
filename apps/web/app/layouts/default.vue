@@ -2,7 +2,7 @@
   <div class="app-layout">
     <AppHeader />
     
-    <main class="app-content container">
+    <main class="app-content">
       <slot />
     </main>
     
@@ -24,12 +24,7 @@ import AppFooter from '~/components/layout/AppFooter.vue';
 
 .app-content {
   flex-grow: 1;
-  padding: 40px var(--space-margin-mobile);
-}
-
-@media (min-width: 1024px) {
-  .app-content {
-    padding: 40px var(--space-margin-desktop);
-  }
+  padding-top: 80px; /* Offset for fixed header (h-20) */
 }
 </style>
+

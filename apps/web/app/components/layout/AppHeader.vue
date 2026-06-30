@@ -1,51 +1,39 @@
 <template>
   <header class="app-header">
-    <div class="container header-container">
-      <NuxtLink to="/" class="logo-link">
-        <span class="logo-badge">LR</span>
-        <span class="logo-text">La Resenha FC</span>
+    <NuxtLink to="/" class="logo-link">
+      La Resenha FC
+    </NuxtLink>
+    
+    <!-- Desktop Nav -->
+    <nav class="nav-links">
+      <NuxtLink to="/" class="nav-item" active-class="nav-active">Home</NuxtLink>
+      <NuxtLink to="/elenco" class="nav-item" active-class="nav-active">Elenco</NuxtLink>
+      <NuxtLink to="/resultados" class="nav-item" active-class="nav-active">Resultados</NuxtLink>
+      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="nav-item" active-class="nav-active">Admin</NuxtLink>
+    </nav>
+    
+    <!-- Action Icons -->
+    <div class="action-icons">
+      <button class="icon-btn material-symbols-outlined" title="Notificações">notifications</button>
+      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="icon-btn material-symbols-outlined" title="Minha Conta">
+        account_circle
       </NuxtLink>
       
-      <!-- Desktop and Mobile Nav -->
-      <nav class="nav-links" :class="{ 'nav-open': isMobileMenuOpen }">
-        <NuxtLink to="/" class="nav-item" active-class="nav-active" @click="closeMobileMenu">
-          Home
-        </NuxtLink>
-        <NuxtLink to="/elenco" class="nav-item" active-class="nav-active" @click="closeMobileMenu">
-          Elenco
-        </NuxtLink>
-        <NuxtLink to="/resultados" class="nav-item" active-class="nav-active" @click="closeMobileMenu">
-          Resultados
-        </NuxtLink>
-        <NuxtLink to="/noticias" class="nav-item" active-class="nav-active" @click="closeMobileMenu">
-          Notícias
-        </NuxtLink>
-        <NuxtLink to="/tabela" class="nav-item" active-class="nav-active" @click="closeMobileMenu">
-          Classificação
-        </NuxtLink>
-        
-        <!-- Auth Button -->
-        <template v-if="isAuthenticated">
-          <NuxtLink to="/admin" class="nav-item nav-admin-link" active-class="nav-active" @click="closeMobileMenu">
-            Painel
-          </NuxtLink>
-          <VButton size="sm" variant="danger" class="admin-btn" @click="handleLogout">
-            Sair
-          </VButton>
-        </template>
-        <template v-else>
-          <VButton to="/admin/login" size="sm" variant="primary" class="admin-btn" @click="closeMobileMenu">
-            Acesso Admin
-          </VButton>
-        </template>
-      </nav>
-
       <!-- Mobile Menu Toggle -->
-      <button class="mobile-menu-toggle" aria-label="Toggle Menu" @click="toggleMobileMenu">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
+      <button class="mobile-menu-toggle material-symbols-outlined" aria-label="Toggle Menu" @click="toggleMobileMenu">
+        {{ isMobileMenuOpen ? 'close' : 'menu' }}
       </button>
+    </div>
+
+    <!-- Mobile Dropdown Nav -->
+    <div v-show="isMobileMenuOpen" class="mobile-nav">
+      <NuxtLink to="/" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Home</NuxtLink>
+      <NuxtLink to="/elenco" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Elenco</NuxtLink>
+      <NuxtLink to="/resultados" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Resultados</NuxtLink>
+      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Admin</NuxtLink>
+      <template v-if="isAuthenticated">
+        <button class="mobile-nav-item logout-btn" @click="handleLogout">Sair da Conta</button>
+      </template>
     </div>
   </header>
 </template>
@@ -53,10 +41,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuth } from '#imports';
-import VButton from '~/components/ui/VButton.vue';
 
 const { isAuthenticated, logout } = useAuth();
-
 const isMobileMenuOpen = ref(false);
 
 const toggleMobileMenu = () => {
@@ -75,142 +61,172 @@ const handleLogout = async () => {
 
 <style scoped>
 .app-header {
-  background-color: var(--color-asphalt);
-  border-bottom: var(--border-width-thick) solid var(--color-asphalt);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
   z-index: 100;
-  padding: 16px 0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 var(--space-margin-mobile);
+  height: 80px; /* h-20 = 80px */
+  background-color: var(--color-background);
+  border-bottom: 4px solid var(--color-outline-variant);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    padding: 0 var(--space-margin-desktop);
+  }
 }
 
 .logo-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-}
-
-.logo-badge {
-  background-color: var(--color-tertiary);
-  color: var(--color-on-tertiary);
   font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 1.25rem;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--color-goal-white);
-  border-radius: var(--radius-md);
-  box-shadow: 2px 2px 0px var(--color-goal-white);
-}
-
-.logo-text {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.75rem;
+  font-size: 2.25rem; /* 36px on mobile */
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--color-goal-white);
-  letter-spacing: 0.05em;
+  color: var(--color-tertiary);
+  text-decoration: none;
+  letter-spacing: -0.05em; /* tracking-tighter */
+  line-height: 1.1;
+  transition: transform 0.1s ease;
+}
+
+@media (min-width: 768px) {
+  .logo-link {
+    font-size: 3rem; /* 48px on desktop (headline-xl) */
+  }
+}
+
+.logo-link:active {
+  transform: translate(2px, 2px);
 }
 
 .nav-links {
-  display: flex;
+  display: none;
+  gap: 32px; /* gap-8 = 32px */
   align-items: center;
-  gap: 24px;
+  height: 100%;
+}
+
+@media (min-width: 768px) {
+  .nav-links {
+    display: flex;
+  }
 }
 
 .nav-item {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.25rem;
+  font-size: 1rem; /* font-label-lg = 16px */
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
   color: var(--color-goal-white);
-  padding: 4px 8px;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
   text-decoration: none;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  padding-bottom: 4px;
+  border-bottom: 4px solid transparent;
+  transition: all 0.1s ease;
 }
 
-.nav-item:hover, .nav-active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+.nav-item:hover {
+  color: var(--color-secondary);
 }
 
-.nav-admin-link {
+.nav-item.nav-active {
   color: var(--color-tertiary);
+  border-bottom: 4px solid var(--color-tertiary);
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem; /* headline-lg is 32px, but 24px/1.5rem fits better in header height */
+  font-weight: 700;
 }
 
-.nav-admin-link:hover, .nav-admin-link.nav-active {
-  color: var(--color-tertiary);
-  border-bottom-color: var(--color-tertiary);
+.action-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.admin-btn {
-  margin-left: 8px;
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-primary); /* text-primary */
+  font-size: 24px;
+  padding: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  background-color: var(--color-surface-container-high);
 }
 
 .mobile-menu-toggle {
-  display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 30px;
-  height: 21px;
+  display: flex;
   background: transparent;
   border: none;
+  color: var(--color-primary);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-toggle {
+    display: none;
+  }
+}
+
+.mobile-nav {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  right: 0;
+  background-color: var(--color-background);
+  border-bottom: 4px solid var(--color-outline-variant);
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 16px var(--space-margin-mobile);
+  gap: 16px;
+  z-index: 99;
+}
+
+.mobile-nav-item {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-goal-white);
+  text-decoration: none;
+  padding: 10px 16px;
+  border-left: 4px solid transparent;
+  transition: all 0.1s ease;
+}
+
+.mobile-nav-item:hover, .mobile-nav-item.mobile-nav-active {
+  color: var(--color-tertiary);
+  border-left-color: var(--color-tertiary);
+  background-color: var(--color-surface-container);
+}
+
+.logout-btn {
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--color-error);
   cursor: pointer;
 }
 
-.mobile-menu-toggle .bar {
-  width: 100%;
-  height: 3px;
-  background-color: var(--color-goal-white);
-  border-radius: 2px;
-  transition: all 0.2s ease;
-}
-
-/* Responsive styles */
-@media (max-width: 900px) {
-  .mobile-menu-toggle {
-    display: flex;
-  }
-
-  .nav-links {
-    position: absolute;
-    top: 73px;
-    left: 0;
-    right: 0;
-    background-color: var(--color-asphalt);
-    flex-direction: column;
-    padding: 24px;
-    gap: 16px;
-    border-bottom: var(--border-width-thick) solid var(--color-asphalt);
-    display: none;
-  }
-
-  .nav-links.nav-open {
-    display: flex;
-  }
-
-  .nav-item {
-    width: 100%;
-    text-align: center;
-    padding: 12px 0;
-  }
-
-  .admin-btn {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 8px;
-  }
+.logout-btn:hover {
+  color: #ffdad6;
 }
 </style>

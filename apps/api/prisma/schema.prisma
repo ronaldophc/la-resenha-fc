@@ -37,16 +37,40 @@ model Player {
   @@map("players")
 }
 
+model Championship {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  logoUrl   String?    @map("logo_url")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  standings Standing[]
+  matches   Match[]
+
+  @@map("championships")
+}
+
+model Team {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  logoUrl   String?    @map("logo_url")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  standings Standing[]
+
+  @@map("teams")
+}
+
 model Match {
-  id           Int      @id @default(autoincrement())
-  date         DateTime
-  opponent     String
-  location     String
-  homeScore    Int      @map("home_score")
-  awayScore    Int      @map("away_score")
-  championship String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             Int           @id @default(autoincrement())
+  date           DateTime
+  opponent       String
+  location       String
+  homeScore      Int           @map("home_score")
+  awayScore      Int           @map("away_score")
+  championshipId Int?          @map("championship_id")
+  championship   Championship? @relation(fields: [championshipId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   @@map("matches")
 }
@@ -66,19 +90,24 @@ model News {
 }
 
 model Standing {
-  id           Int      @id @default(autoincrement())
-  championship String
-  position     Int
-  points       Int
-  played       Int
-  won          Int
-  drawn        Int
-  lost         Int
-  goalsFor     Int      @map("goals_for")
-  goalsAgainst Int      @map("goals_against")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             Int          @id @default(autoincrement())
+  championshipId Int          @map("championship_id")
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  teamId         Int          @map("team_id")
+  team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  position       Int
+  points         Int
+  played         Int
+  won            Int
+  drawn          Int
+  lost           Int
+  goalsFor       Int          @map("goals_for")
+  goalsAgainst   Int          @map("goals_against")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
+  @@unique([championshipId, teamId])
   @@map("standings")
 }
+
 
