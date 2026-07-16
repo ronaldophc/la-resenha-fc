@@ -30,11 +30,14 @@
           </div>
           <div>
             <h1>{{ championship.name }}</h1>
-            <p class="page-subtitle">Gerencie os times associados e insira manualmente as estatísticas da tabela.</p>
+            <p class="page-subtitle">
+              Inscreva os times participantes. A tabela é calculada automaticamente
+              a partir dos resultados das partidas cadastradas.
+            </p>
           </div>
         </div>
         <VButton @click="toggleForm" variant="primary" class="new-standing-btn">
-          {{ showForm ? 'Fechar Formulário ✖' : 'Adicionar Time ao Campeonato 🏆' }}
+          {{ showForm ? 'Fechar Formulário ✖' : 'Inscrever Time no Campeonato 🏆' }}
         </VButton>
       </div>
 
@@ -48,7 +51,7 @@
       <!-- Formulário de Cadastro / Edição de Registro na Tabela -->
       <transition name="slide-fade">
         <VCard v-if="showForm" class="standing-form-card" variant="featured">
-          <h2 class="form-title">{{ isEditing ? 'Editar Estatísticas do Time' : 'Adicionar Time à Tabela' }}</h2>
+          <h2 class="form-title">{{ isEditing ? 'Ajuste de Pontos do Time' : 'Inscrever Time no Campeonato' }}</h2>
           <form @submit.prevent="handleSubmit" class="standing-form">
             <div class="form-grid">
               <!-- Seletor de Times Globais (Apenas na Criação) -->
@@ -56,12 +59,12 @@
                 <label for="teamId">Selecionar Time *</label>
                 <select v-model="form.teamId" id="teamId" required class="form-input">
                   <option value="" disabled>-- Selecione um time --</option>
-                  <option v-for="team in globalTeams" :key="team.id" :value="team.id">
+                  <option v-for="team in availableTeams" :key="team.id" :value="team.id">
                     {{ team.name }}
                   </option>
                 </select>
                 <p class="form-help">
-                  Não achou o time? Crie ele antes na página 
+                  Não achou o time? Crie ele antes na página
                   <NuxtLink to="/admin/times" class="link-in-text">Gerenciar Times</NuxtLink>.
                 </p>
               </div>
@@ -73,107 +76,24 @@
               </div>
 
               <div class="form-group">
-                <label for="position">Posição na Tabela *</label>
-                <input 
-                  v-model.number="form.position" 
-                  type="number" 
-                  id="position" 
-                  placeholder="Ex: 1" 
-                  min="1"
-                  required
+                <label for="pointsAdjustment">Ajuste de Pontos (punição/W.O.)</label>
+                <input
+                  v-model.number="form.pointsAdjustment"
+                  type="number"
+                  id="pointsAdjustment"
+                  placeholder="Ex: -3"
                   class="form-input"
                 />
-              </div>
-
-              <div class="form-group">
-                <label for="points">Pontos *</label>
-                <input 
-                  v-model.number="form.points" 
-                  type="number" 
-                  id="points" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="played">Partidas Jogadas *</label>
-                <input 
-                  v-model.number="form.played" 
-                  type="number" 
-                  id="played" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="won">Vitórias *</label>
-                <input 
-                  v-model.number="form.won" 
-                  type="number" 
-                  id="won" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="drawn">Empates *</label>
-                <input 
-                  v-model.number="form.drawn" 
-                  type="number" 
-                  id="drawn" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="lost">Derrotas *</label>
-                <input 
-                  v-model.number="form.lost" 
-                  type="number" 
-                  id="lost" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="goalsFor">Gols Pró (Marcados) *</label>
-                <input 
-                  v-model.number="form.goalsFor" 
-                  type="number" 
-                  id="goalsFor" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="goalsAgainst">Gols Contra (Sofridos) *</label>
-                <input 
-                  v-model.number="form.goalsAgainst" 
-                  type="number" 
-                  id="goalsAgainst" 
-                  min="0"
-                  required
-                  class="form-input"
-                />
+                <p class="form-help">
+                  Somado ao total calculado. Use valores negativos para punições. Deixe 0 se não houver ajuste.
+                </p>
               </div>
             </div>
 
             <div class="form-actions">
               <VButton type="button" @click="cancelEdit" variant="outline">Cancelar</VButton>
               <VButton type="submit" variant="primary" :disabled="submitting">
-                {{ submitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Salvar Registro') }}
+                {{ submitting ? 'Salvando...' : (isEditing ? 'Salvar Ajuste' : 'Inscrever Time') }}
               </VButton>
             </div>
           </form>
@@ -184,7 +104,7 @@
       <VCard class="standings-list-card">
         <div v-if="championship.standings.length === 0" class="empty-state">
           <span class="empty-icon">🏆</span>
-          <p>Nenhum time associado à tabela de classificação deste campeonato. Adicione um time para começar!</p>
+          <p>Nenhum time inscrito neste campeonato. Inscreva os times participantes — a tabela será montada automaticamente conforme as partidas forem cadastradas!</p>
         </div>
 
         <div v-else class="table-responsive">
@@ -201,6 +121,7 @@
                 <th class="text-center">GP</th>
                 <th class="text-center">GC</th>
                 <th class="text-center">SG</th>
+                <th class="text-center" title="Ajuste manual de pontos">Ajuste</th>
                 <th class="text-center">Ações</th>
               </tr>
             </thead>
@@ -238,10 +159,13 @@
                 <td class="text-center font-bold" :class="standing.goalsFor - standing.goalsAgainst >= 0 ? 'text-green' : 'text-red'">
                   {{ standing.goalsFor - standing.goalsAgainst }}
                 </td>
+                <td class="text-center" :class="{ 'text-red': (standing.pointsAdjustment || 0) < 0, 'text-green': (standing.pointsAdjustment || 0) > 0 }">
+                  {{ (standing.pointsAdjustment || 0) > 0 ? '+' : '' }}{{ standing.pointsAdjustment || 0 }}
+                </td>
                 <td class="actions-cell text-center">
                   <div class="actions-wrapper">
                     <VButton size="sm" @click="startEdit(standing)" class="action-btn edit-btn">
-                      ✏️ Editar
+                      ⚖️ Ajuste
                     </VButton>
                     <VButton size="sm" variant="danger" @click="confirmDelete(standing)" class="action-btn delete-btn">
                       🗑️ Remover
@@ -258,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
@@ -291,6 +215,7 @@ interface Standing {
   lost: number;
   goalsFor: number;
   goalsAgainst: number;
+  pointsAdjustment?: number;
   team: Team;
 }
 
@@ -317,14 +242,13 @@ const editingTeamName = ref('');
 
 const form = ref({
   teamId: '' as number | '',
-  position: 1,
-  points: 0,
-  played: 0,
-  won: 0,
-  drawn: 0,
-  lost: 0,
-  goalsFor: 0,
-  goalsAgainst: 0
+  pointsAdjustment: 0
+});
+
+// Só oferece times que ainda não estão inscritos no campeonato
+const availableTeams = computed(() => {
+  const enrolledIds = new Set((championship.value?.standings || []).map(s => s.teamId));
+  return globalTeams.value.filter(t => !enrolledIds.has(t.id));
 });
 
 const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -379,14 +303,7 @@ const toggleForm = () => {
 const resetForm = () => {
   form.value = {
     teamId: '',
-    position: (championship.value?.standings.length || 0) + 1,
-    points: 0,
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    goalsFor: 0,
-    goalsAgainst: 0
+    pointsAdjustment: 0
   };
   isEditing.value = false;
   editingStandingId.value = null;
@@ -396,14 +313,7 @@ const resetForm = () => {
 const startEdit = (standing: Standing) => {
   form.value = {
     teamId: standing.teamId,
-    position: standing.position,
-    points: standing.points,
-    played: standing.played,
-    won: standing.won,
-    drawn: standing.drawn,
-    lost: standing.lost,
-    goalsFor: standing.goalsFor,
-    goalsAgainst: standing.goalsAgainst
+    pointsAdjustment: standing.pointsAdjustment ?? 0
   };
   editingStandingId.value = standing.id;
   editingTeamName.value = standing.team?.name || 'Time';
@@ -422,32 +332,22 @@ const handleSubmit = async () => {
   feedback.value = null;
 
   try {
-    const payload = {
-      championshipId: champId,
-      teamId: Number(form.value.teamId),
-      position: Number(form.value.position),
-      points: Number(form.value.points),
-      played: Number(form.value.played),
-      won: Number(form.value.won),
-      drawn: Number(form.value.drawn),
-      lost: Number(form.value.lost),
-      goalsFor: Number(form.value.goalsFor),
-      goalsAgainst: Number(form.value.goalsAgainst)
-    };
-
     if (isEditing.value && editingStandingId.value !== null) {
-      // Usando PUT para o endpoint standings/:id como configurado no NestJS controller
       await request(`/standings/${editingStandingId.value}`, {
         method: 'PUT',
-        body: payload
+        body: { pointsAdjustment: Number(form.value.pointsAdjustment) || 0 }
       });
-      showFeedback('success', 'Classificação atualizada com sucesso!');
+      showFeedback('success', 'Ajuste de pontos salvo com sucesso!');
     } else {
       await request('/standings', {
         method: 'POST',
-        body: payload
+        body: {
+          championshipId: champId,
+          teamId: Number(form.value.teamId),
+          pointsAdjustment: Number(form.value.pointsAdjustment) || 0
+        }
       });
-      showFeedback('success', 'Time adicionado à tabela com sucesso!');
+      showFeedback('success', 'Time inscrito no campeonato com sucesso!');
     }
 
     resetForm();
@@ -464,7 +364,7 @@ const handleSubmit = async () => {
 };
 
 const confirmDelete = async (standing: Standing) => {
-  if (confirm(`Tem certeza que deseja remover o time "${standing.team?.name}" deste campeonato? Isso excluirá seu registro de classificação.`)) {
+  if (confirm(`Tem certeza que deseja remover a inscrição do time "${standing.team?.name}" deste campeonato? Ele sai da tabela, mas as partidas dele continuam cadastradas.`)) {
     try {
       await request(`/standings/${standing.id}`, {
         method: 'DELETE'
@@ -792,7 +692,7 @@ onMounted(() => {
 }
 
 .highlight-row {
-  background-color: rgba(181, 237, 0, 0.05) !important;
+  background-color: rgba(255, 167, 38, 0.08) !important;
 }
 
 .pos-cell {
@@ -825,7 +725,7 @@ onMounted(() => {
 }
 
 .text-green {
-  color: var(--color-primary) !important;
+  color: var(--color-vibrant-turf) !important;
 }
 
 .text-red {

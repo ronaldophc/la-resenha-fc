@@ -34,15 +34,6 @@
       </VCard>
     </div>
 
-    <VCard variant="featured" class="info-card">
-      <h2>Pronto para Desenvolvimento</h2>
-      <p>
-        Esta área administrativa está totalmente protegida por rotas do lado do servidor (SSR-safe middleware) e do lado do cliente. Os dados do usuário logado foram carregados com sucesso a partir da API NestJS.
-      </p>
-      <p class="architecture-note">
-        Use as opções no menu lateral para gerenciar o elenco, resultados das partidas, tabela de classificação e notícias. Todas as alterações se refletirão instantaneamente no site público.
-      </p>
-    </VCard>
   </div>
 </template>
 
@@ -164,23 +155,4 @@ onMounted(() => {
   color: var(--color-primary);
 }
 
-.info-card h2 {
-  font-size: 1.75rem;
-  margin-bottom: 12px;
-  color: var(--color-primary);
-}
-
-.info-card p {
-  font-size: 1.05rem;
-  line-height: 1.6;
-  margin-bottom: 16px;
-  color: var(--color-goal-white);
-}
-
-.architecture-note {
-  font-style: italic;
-  font-size: 0.95rem;
-  border-left: 3px solid var(--color-primary);
-  padding-left: 12px;
-}
 </style>

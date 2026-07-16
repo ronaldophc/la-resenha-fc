@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { StandingsService } from './standings.service';
@@ -17,18 +18,21 @@ import { UpdateStandingDto } from './dto/update-standing.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('standings')
 @Controller('standings')
 export class StandingsController {
   constructor(private readonly standingsService: StandingsService) {}
 
-  @ApiOperation({ summary: 'Retorna a tabela de classificação ordenada por posição' })
+  @ApiOperation({ summary: 'Retorna a(s) tabela(s) de classificação calculada(s) a partir das partidas' })
+  @ApiQuery({ name: 'championshipId', required: false, description: 'Filtra a tabela de um campeonato específico' })
   @ApiResponse({ status: 200, description: 'Tabela de classificação retornada com sucesso' })
   @Get()
-  async findAll() {
-    return this.standingsService.findAll();
+  async findAll(
+    @Query('championshipId', new ParseIntPipe({ optional: true })) championshipId?: number,
+  ) {
+    return this.standingsService.findAll(championshipId);
   }
 
   @ApiOperation({ summary: 'Cadastra uma nova linha na tabela de classificação (Apenas ADMIN)' })

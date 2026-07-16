@@ -347,7 +347,7 @@ onMounted(() => {
   padding: 24px;
   border-radius: var(--radius-sm);
   text-align: center;
-  background-color: rgba(181, 237, 0, 0.03);
+  background-color: rgba(255, 167, 38, 0.04);
 }
 
 .share-title {

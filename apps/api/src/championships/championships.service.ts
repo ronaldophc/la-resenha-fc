@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChampionshipDto } from './dto/create-championship.dto';
 import { UpdateChampionshipDto } from './dto/update-championship.dto';
+import { StandingsService } from '../standings/standings.service';
 
 @Injectable()
 export class ChampionshipsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly standingsService: StandingsService,
+  ) {}
 
   async create(data: CreateChampionshipDto) {
     const nameExists = await this.prisma.championship.findUnique({
@@ -19,6 +23,10 @@ export class ChampionshipsService {
       data: {
         name: data.name,
         logoUrl: data.logoUrl ?? null,
+        pointsPerWin: data.pointsPerWin ?? 3,
+        pointsPerDraw: data.pointsPerDraw ?? 1,
+        pointsPerLoss: data.pointsPerLoss ?? 0,
+        tiebreakers: data.tiebreakers ?? ['wins', 'goalDiff', 'goalsFor', 'headToHead'],
       },
     });
   }
@@ -32,21 +40,14 @@ export class ChampionshipsService {
   async findOne(id: number) {
     const championship = await this.prisma.championship.findUnique({
       where: { id },
-      include: {
-        standings: {
-          include: {
-            team: true,
-          },
-          orderBy: {
-            position: 'asc',
-          },
-        },
-      },
     });
     if (!championship) {
       throw new NotFoundException(`Campeonato com ID ${id} não encontrado.`);
     }
-    return championship;
+
+    // Tabela calculada a partir das partidas, no lugar dos registros manuais
+    const standings = await this.standingsService.getTable(id);
+    return { ...championship, standings };
   }
 
   async update(id: number, data: UpdateChampionshipDto) {
@@ -69,6 +70,10 @@ export class ChampionshipsService {
       data: {
         name: data.name,
         logoUrl: data.logoUrl !== undefined ? (data.logoUrl ?? null) : undefined,
+        pointsPerWin: data.pointsPerWin,
+        pointsPerDraw: data.pointsPerDraw,
+        pointsPerLoss: data.pointsPerLoss,
+        tiebreakers: data.tiebreakers,
       },
     });
   }

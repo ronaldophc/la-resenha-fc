@@ -12,12 +12,34 @@ export class CreateMatchDto {
   date: string;
 
   @ApiProperty({
-    description: 'Nome do time adversário',
-    example: 'Tabajara FC',
+    description: 'ID do time mandante. Obrigatório em partidas de campeonato.',
+    example: 1,
+    required: false,
   })
+  @IsOptional()
+  @IsInt({ message: 'O ID do time mandante deve ser um número inteiro.' })
+  @Type(() => Number)
+  homeTeamId?: number;
+
+  @ApiProperty({
+    description: 'ID do time visitante. Obrigatório em partidas de campeonato.',
+    example: 2,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt({ message: 'O ID do time visitante deve ser um número inteiro.' })
+  @Type(() => Number)
+  awayTeamId?: number;
+
+  @ApiProperty({
+    description:
+      'Nome textual do adversário (legado/amistosos sem time cadastrado). Ignorado quando os times são informados por ID.',
+    example: 'Tabajara FC',
+    required: false,
+  })
+  @IsOptional()
   @IsString({ message: 'O adversário deve ser uma string válida.' })
-  @IsNotEmpty({ message: 'O adversário é obrigatório.' })
-  opponent: string;
+  opponent?: string;
 
   @ApiProperty({
     description: 'Local onde a partida será realizada',
@@ -28,32 +50,38 @@ export class CreateMatchDto {
   location: string;
 
   @ApiProperty({
-    description: 'Placar do time da casa (La Resenha FC)',
+    description: 'Gols do mandante. Omitir (ou null) para partida ainda não realizada.',
     example: 3,
     minimum: 0,
+    required: false,
+    nullable: true,
   })
-  @IsInt({ message: 'O placar do time da casa deve ser um número inteiro.' })
-  @Min(0, { message: 'O placar do time da casa não pode ser negativo.' })
+  @IsOptional()
+  @IsInt({ message: 'O placar do mandante deve ser um número inteiro.' })
+  @Min(0, { message: 'O placar do mandante não pode ser negativo.' })
   @Type(() => Number)
-  homeScore: number;
+  homeScore?: number | null;
 
   @ApiProperty({
-    description: 'Placar do time visitante (Adversário)',
+    description: 'Gols do visitante. Omitir (ou null) para partida ainda não realizada.',
     example: 1,
     minimum: 0,
+    required: false,
+    nullable: true,
   })
-  @IsInt({ message: 'O placar do adversário deve ser um número inteiro.' })
-  @Min(0, { message: 'O placar do adversário não pode ser negativo.' })
+  @IsOptional()
+  @IsInt({ message: 'O placar do visitante deve ser um número inteiro.' })
+  @Min(0, { message: 'O placar do visitante não pode ser negativo.' })
   @Type(() => Number)
-  awayScore: number;
+  awayScore?: number | null;
 
   @ApiProperty({
-    description: 'ID do campeonato associado',
+    description: 'ID do campeonato associado (omitir para amistoso)',
     example: 1,
     required: false,
   })
   @IsOptional()
   @IsInt({ message: 'O ID do campeonato deve ser um número inteiro.' })
   @Type(() => Number)
-  championshipId?: number;
+  championshipId?: number | null;
 }

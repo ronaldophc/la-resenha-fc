@@ -12,6 +12,7 @@ import { LoggerMiddleware } from './logger/logger.middleware';
 import { UsersModule } from './users/users.module';
 import { TeamsModule } from './teams/teams.module';
 import { ChampionshipsModule } from './championships/championships.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ChampionshipsModule } from './championships/championships.module';
     UsersModule,
     TeamsModule,
     ChampionshipsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
