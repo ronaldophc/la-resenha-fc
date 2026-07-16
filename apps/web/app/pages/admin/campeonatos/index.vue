@@ -37,14 +37,80 @@
 
             <div class="form-group">
               <label for="logoUrl">Link do Logo (Opcional)</label>
-              <input 
-                v-model="form.logoUrl" 
-                type="url" 
-                id="logoUrl" 
-                placeholder="Ex: https://imagens.com/logo-champ.png" 
+              <input
+                v-model="form.logoUrl"
+                type="url"
+                id="logoUrl"
+                placeholder="Ex: https://imagens.com/logo-champ.png"
                 class="form-input"
               />
             </div>
+          </div>
+
+          <!-- Configuração de Pontuação -->
+          <h3 class="form-section-title">Pontuação</h3>
+          <div class="form-grid form-grid--3">
+            <div class="form-group">
+              <label for="pointsPerWin">Pontos por Vitória *</label>
+              <input
+                v-model.number="form.pointsPerWin"
+                type="number"
+                min="0"
+                id="pointsPerWin"
+                required
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label for="pointsPerDraw">Pontos por Empate *</label>
+              <input
+                v-model.number="form.pointsPerDraw"
+                type="number"
+                min="0"
+                id="pointsPerDraw"
+                required
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label for="pointsPerLoss">Pontos por Derrota *</label>
+              <input
+                v-model.number="form.pointsPerLoss"
+                type="number"
+                min="0"
+                id="pointsPerLoss"
+                required
+                class="form-input"
+              />
+            </div>
+          </div>
+
+          <!-- Critérios de Desempate -->
+          <h3 class="form-section-title">Critérios de Desempate</h3>
+          <p class="form-hint">
+            Aplicados na ordem abaixo quando os times empatam em pontos. Use as setas para reordenar.
+          </p>
+          <ul class="tiebreaker-list">
+            <li v-for="(criterion, index) in form.tiebreakers" :key="criterion" class="tiebreaker-item">
+              <span class="tiebreaker-order">{{ index + 1 }}º</span>
+              <span class="tiebreaker-label">{{ TIEBREAKER_LABELS[criterion] || criterion }}</span>
+              <div class="tiebreaker-actions">
+                <button type="button" class="tiebreaker-btn" :disabled="index === 0" @click="moveTiebreaker(index, -1)" title="Subir">▲</button>
+                <button type="button" class="tiebreaker-btn" :disabled="index === form.tiebreakers.length - 1" @click="moveTiebreaker(index, 1)" title="Descer">▼</button>
+                <button type="button" class="tiebreaker-btn tiebreaker-btn--remove" @click="removeTiebreaker(index)" title="Remover">✖</button>
+              </div>
+            </li>
+          </ul>
+          <div v-if="availableTiebreakers.length > 0" class="tiebreaker-add">
+            <select v-model="tiebreakerToAdd" class="form-input tiebreaker-select">
+              <option value="" disabled>Adicionar critério...</option>
+              <option v-for="c in availableTiebreakers" :key="c" :value="c">
+                {{ TIEBREAKER_LABELS[c] }}
+              </option>
+            </select>
+            <VButton type="button" size="sm" @click="addTiebreaker" :disabled="!tiebreakerToAdd">
+              + Adicionar
+            </VButton>
           </div>
 
           <div class="form-actions">
@@ -101,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useHead, definePageMeta, navigateTo } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
@@ -120,7 +186,22 @@ interface Championship {
   id: number;
   name: string;
   logoUrl?: string;
+  pointsPerWin?: number;
+  pointsPerDraw?: number;
+  pointsPerLoss?: number;
+  tiebreakers?: string[];
 }
+
+const TIEBREAKER_LABELS: Record<string, string> = {
+  wins: 'Vitórias',
+  goalDiff: 'Saldo de gols',
+  goalsFor: 'Gols pró',
+  goalsAgainst: 'Menos gols sofridos',
+  headToHead: 'Confronto direto',
+};
+
+const ALL_TIEBREAKERS = Object.keys(TIEBREAKER_LABELS);
+const DEFAULT_TIEBREAKERS = ['wins', 'goalDiff', 'goalsFor', 'headToHead'];
 
 const { request } = useApi();
 
@@ -130,11 +211,39 @@ const submitting = ref(false);
 const showForm = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
+const tiebreakerToAdd = ref('');
 
 const form = ref({
   name: '',
-  logoUrl: ''
+  logoUrl: '',
+  pointsPerWin: 3,
+  pointsPerDraw: 1,
+  pointsPerLoss: 0,
+  tiebreakers: [...DEFAULT_TIEBREAKERS] as string[]
 });
+
+const availableTiebreakers = computed(() =>
+  ALL_TIEBREAKERS.filter(c => !form.value.tiebreakers.includes(c))
+);
+
+const moveTiebreaker = (index: number, delta: number) => {
+  const target = index + delta;
+  if (target < 0 || target >= form.value.tiebreakers.length) return;
+  const list = [...form.value.tiebreakers];
+  [list[index], list[target]] = [list[target], list[index]];
+  form.value.tiebreakers = list;
+};
+
+const removeTiebreaker = (index: number) => {
+  form.value.tiebreakers = form.value.tiebreakers.filter((_, i) => i !== index);
+};
+
+const addTiebreaker = () => {
+  if (tiebreakerToAdd.value && !form.value.tiebreakers.includes(tiebreakerToAdd.value)) {
+    form.value.tiebreakers = [...form.value.tiebreakers, tiebreakerToAdd.value];
+  }
+  tiebreakerToAdd.value = '';
+};
 
 const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -172,8 +281,13 @@ const toggleForm = () => {
 const resetForm = () => {
   form.value = {
     name: '',
-    logoUrl: ''
+    logoUrl: '',
+    pointsPerWin: 3,
+    pointsPerDraw: 1,
+    pointsPerLoss: 0,
+    tiebreakers: [...DEFAULT_TIEBREAKERS]
   };
+  tiebreakerToAdd.value = '';
   isEditing.value = false;
   editingId.value = null;
 };
@@ -181,7 +295,11 @@ const resetForm = () => {
 const startEdit = (champ: Championship) => {
   form.value = {
     name: champ.name,
-    logoUrl: champ.logoUrl || ''
+    logoUrl: champ.logoUrl || '',
+    pointsPerWin: champ.pointsPerWin ?? 3,
+    pointsPerDraw: champ.pointsPerDraw ?? 1,
+    pointsPerLoss: champ.pointsPerLoss ?? 0,
+    tiebreakers: champ.tiebreakers?.length ? [...champ.tiebreakers] : [...DEFAULT_TIEBREAKERS]
   };
   editingId.value = champ.id;
   isEditing.value = true;
@@ -201,7 +319,11 @@ const handleSubmit = async () => {
   try {
     const payload = {
       name: form.value.name,
-      logoUrl: form.value.logoUrl || null
+      logoUrl: form.value.logoUrl || null,
+      pointsPerWin: form.value.pointsPerWin,
+      pointsPerDraw: form.value.pointsPerDraw,
+      pointsPerLoss: form.value.pointsPerLoss,
+      tiebreakers: form.value.tiebreakers
     };
 
     if (isEditing.value && editingId.value !== null) {
@@ -403,6 +525,111 @@ onMounted(() => {
   margin-top: 24px;
   border-top: 2px solid rgba(255, 255, 255, 0.05);
   padding-top: 16px;
+}
+
+.form-section-title {
+  font-family: 'Oswald', sans-serif;
+  text-transform: uppercase;
+  font-size: 1.25rem;
+  color: var(--color-goal-white);
+  margin: 24px 0 12px 0;
+  border-bottom: 2px dashed var(--color-outline-variant);
+  padding-bottom: 6px;
+}
+
+.form-hint {
+  font-size: 0.95rem;
+  color: #a3a3a3;
+  margin: 0 0 12px 0;
+}
+
+.form-grid--3 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .form-grid--3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tiebreaker-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tiebreaker-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--color-surface-container-low);
+  border: 2px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: 2px 2px 0px var(--color-asphalt);
+}
+
+.tiebreaker-order {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 28px;
+}
+
+.tiebreaker-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-goal-white);
+  flex-grow: 1;
+}
+
+.tiebreaker-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tiebreaker-btn {
+  background-color: var(--color-surface-bright);
+  color: var(--color-goal-white);
+  border: 2px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tiebreaker-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.tiebreaker-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tiebreaker-btn--remove:hover {
+  border-color: #ff5252;
+  color: #ff5252;
+}
+
+.tiebreaker-add {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tiebreaker-select {
+  max-width: 280px;
 }
 
 .slide-fade-enter-active,

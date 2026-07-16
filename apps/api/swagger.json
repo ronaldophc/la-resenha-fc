@@ -919,13 +919,23 @@
     "/standings": {
       "get": {
         "operationId": "StandingsController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "championshipId",
+            "required": false,
+            "in": "query",
+            "description": "Filtra a tabela de um campeonato específico",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Tabela de classificação retornada com sucesso"
           }
         },
-        "summary": "Retorna a tabela de classificação ordenada por posição",
+        "summary": "Retorna a(s) tabela(s) de classificação calculada(s) a partir das partidas",
         "tags": [
           "standings"
         ]
@@ -1364,6 +1374,55 @@
           "championships"
         ]
       }
+    },
+    "/settings": {
+      "get": {
+        "operationId": "SettingsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Configurações retornadas com sucesso"
+          }
+        },
+        "summary": "Retorna as configurações gerais do site/clube",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "operationId": "SettingsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configurações atualizadas com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada malformados ou inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza as configurações gerais do site/clube (Apenas ADMIN)",
+        "tags": [
+          "settings"
+        ]
+      }
     }
   },
   "info": {
@@ -1479,9 +1538,19 @@
             "description": "Data e hora da partida no formato ISO 8601",
             "example": "2026-06-22T21:00:00.000Z"
           },
+          "homeTeamId": {
+            "type": "number",
+            "description": "ID do time mandante. Obrigatório em partidas de campeonato.",
+            "example": 1
+          },
+          "awayTeamId": {
+            "type": "number",
+            "description": "ID do time visitante. Obrigatório em partidas de campeonato.",
+            "example": 2
+          },
           "opponent": {
             "type": "string",
-            "description": "Nome do time adversário",
+            "description": "Nome textual do adversário (legado/amistosos sem time cadastrado). Ignorado quando os times são informados por ID.",
             "example": "Tabajara FC"
           },
           "location": {
@@ -1490,29 +1559,28 @@
             "example": "Estádio Pinheirão"
           },
           "homeScore": {
-            "type": "number",
-            "description": "Placar do time da casa (La Resenha FC)",
+            "type": "object",
+            "description": "Gols do mandante. Omitir (ou null) para partida ainda não realizada.",
             "example": 3,
-            "minimum": 0
+            "minimum": 0,
+            "nullable": true
           },
           "awayScore": {
-            "type": "number",
-            "description": "Placar do time visitante (Adversário)",
+            "type": "object",
+            "description": "Gols do visitante. Omitir (ou null) para partida ainda não realizada.",
             "example": 1,
-            "minimum": 0
+            "minimum": 0,
+            "nullable": true
           },
           "championshipId": {
-            "type": "number",
-            "description": "ID do campeonato associado",
+            "type": "object",
+            "description": "ID do campeonato associado (omitir para amistoso)",
             "example": 1
           }
         },
         "required": [
           "date",
-          "opponent",
-          "location",
-          "homeScore",
-          "awayScore"
+          "location"
         ]
       },
       "CreateNewsDto": {
@@ -1559,58 +1627,16 @@
             "description": "ID do time associado",
             "example": 1
           },
-          "position": {
+          "pointsAdjustment": {
             "type": "number",
-            "description": "Posição na tabela de classificação",
-            "example": 1
-          },
-          "points": {
-            "type": "number",
-            "description": "Pontos ganhos",
-            "example": 15
-          },
-          "played": {
-            "type": "number",
-            "description": "Partidas jogadas",
-            "example": 6
-          },
-          "won": {
-            "type": "number",
-            "description": "Vitórias",
-            "example": 5
-          },
-          "drawn": {
-            "type": "number",
-            "description": "Empates",
-            "example": 0
-          },
-          "lost": {
-            "type": "number",
-            "description": "Derrotas",
-            "example": 1
-          },
-          "goalsFor": {
-            "type": "number",
-            "description": "Gols marcados (pró)",
-            "example": 18
-          },
-          "goalsAgainst": {
-            "type": "number",
-            "description": "Gols sofridos (contra)",
-            "example": 4
+            "description": "Ajuste manual de pontos (punições/W.O.), somado ao total calculado. Pode ser negativo.",
+            "example": -3,
+            "default": 0
           }
         },
         "required": [
           "championshipId",
-          "teamId",
-          "position",
-          "points",
-          "played",
-          "won",
-          "drawn",
-          "lost",
-          "goalsFor",
-          "goalsAgainst"
+          "teamId"
         ]
       },
       "UpdateStandingDto": {
@@ -1626,45 +1652,11 @@
             "description": "ID do time associado",
             "example": 1
           },
-          "position": {
+          "pointsAdjustment": {
             "type": "number",
-            "description": "Posição na tabela de classificação",
-            "example": 1
-          },
-          "points": {
-            "type": "number",
-            "description": "Pontos ganhos",
-            "example": 15
-          },
-          "played": {
-            "type": "number",
-            "description": "Partidas jogadas",
-            "example": 6
-          },
-          "won": {
-            "type": "number",
-            "description": "Vitórias",
-            "example": 5
-          },
-          "drawn": {
-            "type": "number",
-            "description": "Empates",
-            "example": 0
-          },
-          "lost": {
-            "type": "number",
-            "description": "Derrotas",
-            "example": 1
-          },
-          "goalsFor": {
-            "type": "number",
-            "description": "Gols marcados (pró)",
-            "example": 18
-          },
-          "goalsAgainst": {
-            "type": "number",
-            "description": "Gols sofridos (contra)",
-            "example": 4
+            "description": "Ajuste manual de pontos (punições/W.O.), somado ao total calculado. Pode ser negativo.",
+            "example": -3,
+            "default": 0
           }
         }
       },
@@ -1713,6 +1705,44 @@
             "type": "string",
             "description": "URL do logo do campeonato",
             "example": "https://exemplo.com/logo-champ.png"
+          },
+          "pointsPerWin": {
+            "type": "number",
+            "description": "Pontos por vitória",
+            "example": 3,
+            "default": 3
+          },
+          "pointsPerDraw": {
+            "type": "number",
+            "description": "Pontos por empate",
+            "example": 1,
+            "default": 1
+          },
+          "pointsPerLoss": {
+            "type": "number",
+            "description": "Pontos por derrota",
+            "example": 0,
+            "default": 0
+          },
+          "tiebreakers": {
+            "type": "array",
+            "description": "Critérios de desempate, em ordem de aplicação (pontos é sempre o primeiro critério, implícito).",
+            "example": [
+              "wins",
+              "goalDiff",
+              "goalsFor",
+              "headToHead"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "wins",
+                "goalDiff",
+                "goalsFor",
+                "goalsAgainst",
+                "headToHead"
+              ]
+            }
           }
         },
         "required": [
@@ -1731,6 +1761,94 @@
             "type": "string",
             "description": "URL do logo do campeonato",
             "example": "https://exemplo.com/logo-champ.png"
+          },
+          "pointsPerWin": {
+            "type": "number",
+            "description": "Pontos por vitória",
+            "example": 3,
+            "default": 3
+          },
+          "pointsPerDraw": {
+            "type": "number",
+            "description": "Pontos por empate",
+            "example": 1,
+            "default": 1
+          },
+          "pointsPerLoss": {
+            "type": "number",
+            "description": "Pontos por derrota",
+            "example": 0,
+            "default": 0
+          },
+          "tiebreakers": {
+            "type": "array",
+            "description": "Critérios de desempate, em ordem de aplicação (pontos é sempre o primeiro critério, implícito).",
+            "example": [
+              "wins",
+              "goalDiff",
+              "goalsFor",
+              "headToHead"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "wins",
+                "goalDiff",
+                "goalsFor",
+                "goalsAgainst",
+                "headToHead"
+              ]
+            }
+          }
+        }
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "clubName": {
+            "type": "string",
+            "description": "Nome do clube",
+            "example": "La Resenha FC"
+          },
+          "logoUrl": {
+            "type": "object",
+            "description": "URL do logo do clube",
+            "nullable": true
+          },
+          "bannerUrl": {
+            "type": "object",
+            "description": "URL da imagem do banner da home",
+            "nullable": true
+          },
+          "socialTitle": {
+            "type": "object",
+            "description": "Título da seção de redes sociais da home",
+            "nullable": true
+          },
+          "socialSubtitle": {
+            "type": "object",
+            "description": "Subtítulo da seção de redes sociais da home",
+            "nullable": true
+          },
+          "instagramUrl": {
+            "type": "object",
+            "description": "Link do Instagram",
+            "nullable": true
+          },
+          "whatsappNumber": {
+            "type": "object",
+            "description": "Número do WhatsApp com DDI e DDD, somente dígitos (ex: 5541999999999)",
+            "nullable": true
+          },
+          "youtubeUrl": {
+            "type": "object",
+            "description": "Link do YouTube",
+            "nullable": true
+          },
+          "facebookUrl": {
+            "type": "object",
+            "description": "Link do Facebook",
+            "nullable": true
           }
         }
       }

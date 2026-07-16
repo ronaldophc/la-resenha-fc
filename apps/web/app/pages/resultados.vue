@@ -4,6 +4,16 @@
     <div class="page-header">
       <h1 class="page-title">Calendário & Classificação</h1>
       <p class="page-subtitle">Acompanhe as batalhas na quadra e a nossa jornada rumo ao topo da liga.</p>
+
+      <!-- Filtro Único de Competição (controla confrontos e classificação) -->
+      <div class="select-wrapper page-header__filter">
+        <select v-model="selectedChampionship" class="championship-select">
+          <option v-for="champ in championshipsList" :key="champ" :value="champ">
+            {{ champ }}
+          </option>
+          <option v-if="hasFriendlies" value="friendly">Amistosos</option>
+        </select>
+      </div>
     </div>
 
     <!-- Grid de Conteúdo Central -->
@@ -19,22 +29,22 @@
           
           <!-- Filtro de Partidas (Estilo Neobrutalista) -->
           <div class="filter-bar">
-            <button 
-              class="filter-btn" 
+            <button
+              class="filter-btn"
               :class="{ 'filter-btn--active': selectedFilter === 'all' }"
               @click="selectedFilter = 'all'"
             >
               Todos
             </button>
-            <button 
-              class="filter-btn" 
+            <button
+              class="filter-btn"
               :class="{ 'filter-btn--active': selectedFilter === 'completed' }"
               @click="selectedFilter = 'completed'"
             >
               Últimos Jogos
             </button>
-            <button 
-              class="filter-btn" 
+            <button
+              class="filter-btn"
               :class="{ 'filter-btn--active': selectedFilter === 'upcoming' }"
               @click="selectedFilter = 'upcoming'"
             >
@@ -45,15 +55,15 @@
 
         <!-- Lista de Partidas -->
         <div v-if="filteredMatches.length > 0" class="matches-list">
-          <div 
-            v-for="match in filteredMatches" 
-            :key="match.id" 
+          <div
+            v-for="match in filteredMatches"
+            :key="match.id"
             class="match-card"
-            :class="{ 
-              'match-card--upcoming': isUpcoming(match.date),
-              'match-card--won': !isUpcoming(match.date) && match.homeScore > match.awayScore,
-              'match-card--lost': !isUpcoming(match.date) && match.homeScore < match.awayScore,
-              'match-card--drawn': !isUpcoming(match.date) && match.homeScore === match.awayScore
+            :class="{
+              'match-card--upcoming': match.scheduled,
+              'match-card--won': match.result === 'won',
+              'match-card--lost': match.result === 'lost',
+              'match-card--drawn': match.result === 'drawn'
             }"
           >
             <!-- Detalhes do Topo -->
@@ -68,25 +78,25 @@
 
             <!-- Placar / Confronto -->
             <div class="match-card__body">
-              <!-- Time da Casa: La Resenha FC -->
+              <!-- Time Mandante -->
               <div class="match-card__team match-card__team--home">
                 <div class="match-card__logo-wrapper match-card__logo-wrapper--home">
-                  <img v-if="match.homeLogo" :src="match.homeLogo" alt="La Resenha" class="match-card__logo-img" />
+                  <img v-if="match.homeLogo" :src="match.homeLogo" :alt="match.homeName" class="match-card__logo-img" />
                   <span v-else class="material-symbols-outlined">shield</span>
                 </div>
-                <span class="match-card__team-name">La Resenha</span>
+                <span class="match-card__team-name">{{ match.homeName }}</span>
               </div>
 
               <!-- Placar Central -->
               <div class="match-card__score-box">
-                <template v-if="!isUpcoming(match.date)">
+                <template v-if="!match.scheduled">
                   <div class="match-card__scores">
                     <span class="match-card__score-num">{{ match.homeScore }}</span>
                     <span class="match-card__score-divider">-</span>
                     <span class="match-card__score-num">{{ match.awayScore }}</span>
                   </div>
                   <span class="match-card__result-badge">
-                    {{ getResultLabel(match.homeScore, match.awayScore) }}
+                    {{ getResultLabel(match.result) }}
                   </span>
                 </template>
                 <template v-else>
@@ -98,25 +108,19 @@
               <!-- Time Visitante -->
               <div class="match-card__team match-card__team--away">
                 <div class="match-card__logo-wrapper match-card__logo-wrapper--away">
-                  <img v-if="match.opponentLogo" :src="match.opponentLogo" :alt="match.opponent" class="match-card__logo-img" />
+                  <img v-if="match.opponentLogo" :src="match.opponentLogo" :alt="match.awayName" class="match-card__logo-img" />
                   <span v-else class="material-symbols-outlined">sports_soccer</span>
                 </div>
-                <span class="match-card__team-name">{{ match.opponent }}</span>
+                <span class="match-card__team-name">{{ match.awayName }}</span>
               </div>
             </div>
 
-            <!-- Localização e Detalhes do Rodapé -->
+            <!-- Localização -->
             <div class="match-card__footer">
               <div class="match-card__location">
                 <span class="material-symbols-outlined">location_on</span>
                 <span class="match-card__location-text">{{ match.location }}</span>
               </div>
-              <button 
-                class="match-card__maps-btn"
-                @click="handleVerLocalizacao(match.location)"
-              >
-                Ver Localização
-              </button>
             </div>
           </div>
         </div>
@@ -135,16 +139,6 @@
             <span class="material-symbols-outlined">leaderboard</span>
             Classificação
           </h2>
-          
-          <!-- Filtro de Campeonato -->
-          <div class="select-wrapper">
-            <select v-model="selectedChampionship" class="championship-select">
-              <option value="all">Todos os Torneios</option>
-              <option v-for="champ in championshipsList" :key="champ" :value="champ">
-                {{ champ }}
-              </option>
-            </select>
-          </div>
         </div>
 
         <!-- Tabela Neobrutalista -->
@@ -197,20 +191,11 @@
         <!-- Estado Vazamento da Tabela -->
         <div v-else class="empty-state">
           <span class="material-symbols-outlined empty-state__icon">leaderboard</span>
-          <p class="empty-state__text">Nenhuma classificação disponível.</p>
+          <p class="empty-state__text">
+            {{ selectedChampionship === 'friendly' ? 'Amistosos não possuem classificação.' : 'Nenhuma classificação disponível.' }}
+          </p>
         </div>
 
-        <!-- Legenda da Classificação -->
-        <div class="table-legend">
-          <div class="legend-item">
-            <span class="legend-dot legend-dot--g4"></span>
-            <span class="legend-text">Zona de Classificação (G4)</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-dot legend-dot--highlight"></span>
-            <span class="legend-text">La Resenha FC (Destaque)</span>
-          </div>
-        </div>
       </aside>
 
     </div>
@@ -223,7 +208,7 @@ import { useHead, useApi } from '#imports';
 
 // --- TITLES & SEO ---
 useHead({
-  title: 'Resultados & Classificação - La Resenha FC',
+  title: 'Campeonatos - La Resenha FC',
   meta: [
     { name: 'description', content: 'Acompanhe as partidas, pontuações, calendário e a tabela de classificação do La Resenha FC nas competições locais.' }
   ]
@@ -233,13 +218,17 @@ useHead({
 interface Match {
   id: number;
   date: string;
-  opponent: string;
   location: string;
-  homeScore: number;
-  awayScore: number;
+  homeName: string;
+  awayName: string;
+  homeScore: number | null;
+  awayScore: number | null;
   championship: string | null;
   opponentLogo?: string | null;
   homeLogo?: string | null;
+  scheduled: boolean;
+  // Resultado na perspectiva do La Resenha (null se agendada ou não envolve o clube)
+  result: 'won' | 'lost' | 'drawn' | null;
 }
 
 interface Standing {
@@ -259,7 +248,10 @@ interface Standing {
 
 // --- STATE & FILTER CONSTANTS ---
 const selectedFilter = ref<'all' | 'completed' | 'upcoming'>('all');
-const selectedChampionship = ref<string>('all');
+const selectedChampionship = ref<string>('');
+
+// Competições conhecidas (união de partidas + classificação), mais recente primeiro
+const championships = ref<{ name: string; createdAt: string }[]>([]);
 
 const matches = ref<Match[]>([]);
 const standings = ref<Standing[]>([]);
@@ -267,12 +259,6 @@ const standings = ref<Standing[]>([]);
 const { request } = useApi();
 
 // --- LOGIC HELPERS ---
-const isUpcoming = (dateString: string) => {
-  const matchDate = new Date(dateString);
-  const now = new Date();
-  return matchDate > now;
-};
-
 const formatMatchDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
@@ -286,10 +272,11 @@ const formatMatchDate = (dateString: string) => {
   }
 };
 
-const getResultLabel = (homeScore: number, awayScore: number) => {
-  if (homeScore > awayScore) return 'VITÓRIA';
-  if (homeScore < awayScore) return 'DERROTA';
-  return 'EMPATE';
+const getResultLabel = (result: 'won' | 'lost' | 'drawn' | null) => {
+  if (result === 'won') return 'VITÓRIA';
+  if (result === 'lost') return 'DERROTA';
+  if (result === 'drawn') return 'EMPATE';
+  return '';
 };
 
 const getPosClass = (pos: number) => {
@@ -303,45 +290,45 @@ const getGoalDiffClass = (diff: number) => {
   return 'text-white-muted';
 };
 
-// --- ACTION HANDLERS ---
-const handleVerLocalizacao = (location: string) => {
-  const query = encodeURIComponent(location);
-  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-};
-
 // --- COMPUTED FILTERED ARRAYS ---
+const hasFriendlies = computed(() => matches.value.some(m => !m.championship));
+
 const filteredMatches = computed(() => {
   let list = [...matches.value];
-  
+
+  // Filtro por competição (amistosos = partidas sem campeonato)
+  if (selectedChampionship.value === 'friendly') {
+    list = list.filter(m => !m.championship);
+  } else if (selectedChampionship.value) {
+    list = list.filter(m => m.championship === selectedChampionship.value);
+  }
+
   // Ordenar decrescente por data para jogos anteriores e crescente para jogos futuros
   list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (selectedFilter.value === 'completed') {
-    return list.filter(m => !isUpcoming(m.date));
+    return list.filter(m => !m.scheduled);
   } else if (selectedFilter.value === 'upcoming') {
-    // Para próximos confrontos, ordenar crescente
-    return list.filter(m => isUpcoming(m.date)).reverse();
+    // Para próximos confrontos (sem placar lançado), ordenar crescente
+    return list.filter(m => m.scheduled).reverse();
   }
   return list;
 });
 
-const championshipsList = computed(() => {
-  const list = new Set<string>();
-  standings.value.forEach(s => {
-    if (s.championship) list.add(s.championship);
-  });
-  return Array.from(list);
-});
+const championshipsList = computed(() => championships.value.map(c => c.name));
 
 const filteredStandings = computed(() => {
-  if (selectedChampionship.value === 'all') {
-    return standings.value;
+  if (!selectedChampionship.value || selectedChampionship.value === 'friendly') {
+    return [];
   }
   return standings.value.filter(s => s.championship === selectedChampionship.value);
 });
 
 // --- DATA FETCHING ---
 const loadData = async () => {
+  // Coleta competições (nome -> createdAt) vistas nas partidas e na classificação
+  const champMap = new Map<string, string>();
+
   // 0. Carregar times para obter os logos
   const teamLogoMap = new Map<string, string | null>();
   try {
@@ -368,17 +355,45 @@ const loadData = async () => {
       dynamicMatches = apiMatches.data;
     }
 
-    matches.value = dynamicMatches.map(m => ({
-      id: m.id,
-      date: m.date,
-      opponent: m.opponent,
-      location: m.location,
-      homeScore: m.homeScore,
-      awayScore: m.awayScore,
-      championship: m.championship?.name || m.championship || null,
-      opponentLogo: teamLogoMap.get(m.opponent.toLowerCase()) || null,
-      homeLogo: teamLogoMap.get('la resenha') || teamLogoMap.get('la resenha fc') || null
-    }));
+    dynamicMatches.forEach(m => {
+      const c = m.championship;
+      if (c && typeof c === 'object' && c.name) champMap.set(c.name, c.createdAt || '');
+    });
+
+    // Site público mostra apenas os confrontos do La Resenha
+    const ourMatches = dynamicMatches.filter(m =>
+      m.homeTeam?.isOwnClub || m.awayTeam?.isOwnClub || (!m.homeTeam && !m.awayTeam)
+    );
+
+    matches.value = ourMatches.map(m => {
+      const homeName: string = m.homeTeam?.name || 'La Resenha';
+      const awayName: string = m.awayTeam?.name || m.opponent || 'Adversário';
+      const scheduled = m.homeScore === null || m.homeScore === undefined;
+
+      // Resultado na perspectiva do La Resenha (independe de mando de campo)
+      let result: 'won' | 'lost' | 'drawn' | null = null;
+      if (!scheduled) {
+        const weAreHome = m.awayTeam?.isOwnClub ? false : true;
+        const ourScore = weAreHome ? m.homeScore : m.awayScore;
+        const theirScore = weAreHome ? m.awayScore : m.homeScore;
+        result = ourScore > theirScore ? 'won' : ourScore < theirScore ? 'lost' : 'drawn';
+      }
+
+      return {
+        id: m.id,
+        date: m.date,
+        location: m.location,
+        homeName,
+        awayName,
+        homeScore: m.homeScore ?? null,
+        awayScore: m.awayScore ?? null,
+        championship: m.championship?.name || m.championship || null,
+        homeLogo: m.homeTeam?.logoUrl || teamLogoMap.get(homeName.toLowerCase()) || null,
+        opponentLogo: m.awayTeam?.logoUrl || teamLogoMap.get(awayName.toLowerCase()) || null,
+        scheduled,
+        result
+      };
+    });
   } catch (error) {
     console.warn('API /matches falhou ou indisponível.');
     matches.value = [];
@@ -415,11 +430,29 @@ const loadData = async () => {
       };
     });
 
+    dynamicStandings.forEach(s => {
+      const c = s.championship;
+      if (c && typeof c === 'object' && c.name) champMap.set(c.name, c.createdAt || '');
+    });
+
     mapped.sort((a, b) => a.position - b.position);
     standings.value = mapped;
   } catch (error) {
     console.warn('API /standings falhou ou indisponível.');
     standings.value = [];
+  }
+
+  // 3. Montar lista de competições (mais recente primeiro) e selecionar a padrão
+  championships.value = Array.from(champMap.entries())
+    .map(([name, createdAt]) => ({ name, createdAt }))
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+  if (!selectedChampionship.value) {
+    if (championships.value.length > 0) {
+      selectedChampionship.value = championships.value[0].name;
+    } else if (hasFriendlies.value) {
+      selectedChampionship.value = 'friendly';
+    }
   }
 };
 
@@ -467,6 +500,11 @@ onMounted(async () => {
   margin-top: 12px;
   max-width: 700px;
   line-height: 1.5;
+}
+
+.page-header__filter {
+  margin-top: 24px;
+  max-width: 320px;
 }
 
 /* ==========================================
@@ -611,7 +649,7 @@ onMounted(async () => {
 }
 
 .match-card--won::before {
-  background-color: var(--color-secondary); /* Turf green */
+  background-color: var(--color-vibrant-turf); /* verde = vitória (semântica) */
 }
 
 .match-card--lost::before {
@@ -780,8 +818,8 @@ onMounted(async () => {
 }
 
 .match-card--won .match-card__result-badge {
-  background-color: var(--color-secondary);
-  color: var(--color-on-secondary);
+  background-color: var(--color-vibrant-turf);
+  color: #052e16;
 }
 
 .match-card--lost .match-card__result-badge {
@@ -838,32 +876,6 @@ onMounted(async () => {
   font-family: 'Public Sans', sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
-}
-
-.match-card__maps-btn {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  background-color: var(--color-surface-bright);
-  color: var(--color-goal-white);
-  border: 2px solid var(--color-outline-variant);
-  padding: 6px 14px;
-  cursor: pointer;
-  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
-  transition: all 0.1s ease;
-  align-self: flex-start;
-}
-
-.match-card__maps-btn:hover {
-  background-color: var(--color-primary);
-  color: var(--color-on-primary);
-  border-color: var(--color-asphalt);
-}
-
-.match-card__maps-btn:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 1);
 }
 
 /* ==========================================
@@ -1054,7 +1066,7 @@ onMounted(async () => {
 }
 
 .text-turf-green {
-  color: var(--color-secondary) !important;
+  color: var(--color-vibrant-turf) !important;
 }
 
 .text-error-red {
@@ -1063,45 +1075,6 @@ onMounted(async () => {
 
 .text-white-muted {
   color: var(--color-on-surface-variant) !important;
-}
-
-/* Legenda da Tabela */
-.table-legend {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 0 8px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legend-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid var(--color-asphalt);
-}
-
-.legend-dot--g4 {
-  background-color: var(--color-primary-container);
-}
-
-.legend-dot--highlight {
-  background-color: var(--color-tertiary);
-}
-
-.legend-text {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--color-on-surface-variant);
-  letter-spacing: 0.02em;
 }
 
 /* ==========================================

@@ -38,24 +38,35 @@ model Player {
 }
 
 model Championship {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  logoUrl   String?    @map("logo_url")
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  standings Standing[]
-  matches   Match[]
+  id            Int        @id @default(autoincrement())
+  name          String     @unique
+  logoUrl       String?    @map("logo_url")
+  // Configuração de pontuação
+  pointsPerWin  Int        @default(3) @map("points_per_win")
+  pointsPerDraw Int        @default(1) @map("points_per_draw")
+  pointsPerLoss Int        @default(0) @map("points_per_loss")
+  // Critérios de desempate, em ordem de aplicação.
+  // Valores válidos: "wins" | "goalDiff" | "goalsFor" | "goalsAgainst" | "headToHead"
+  tiebreakers   String[]   @default(["wins", "goalDiff", "goalsFor", "headToHead"])
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  standings     Standing[]
+  matches       Match[]
 
   @@map("championships")
 }
 
 model Team {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  logoUrl   String?    @map("logo_url")
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  standings Standing[]
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  logoUrl     String?    @map("logo_url")
+  // Identifica o time da casa (La Resenha) para o site público
+  isOwnClub   Boolean    @default(false) @map("is_own_club")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  standings   Standing[]
+  homeMatches Match[]    @relation("homeMatches")
+  awayMatches Match[]    @relation("awayMatches")
 
   @@map("teams")
 }
@@ -63,10 +74,18 @@ model Team {
 model Match {
   id             Int           @id @default(autoincrement())
   date           DateTime
+  // Legado: nome textual do adversário (perspectiva do La Resenha).
+  // Mantido preenchido para compatibilidade com o site público durante a transição.
   opponent       String
   location       String
-  homeScore      Int           @map("home_score")
-  awayScore      Int           @map("away_score")
+  // Placar nulo = partida agendada (ainda não realizada); só partidas com
+  // placar preenchido entram no cálculo da classificação.
+  homeScore      Int?          @map("home_score")
+  awayScore      Int?          @map("away_score")
+  homeTeamId     Int?          @map("home_team_id")
+  homeTeam       Team?         @relation("homeMatches", fields: [homeTeamId], references: [id], onDelete: SetNull)
+  awayTeamId     Int?          @map("away_team_id")
+  awayTeam       Team?         @relation("awayMatches", fields: [awayTeamId], references: [id], onDelete: SetNull)
   championshipId Int?          @map("championship_id")
   championship   Championship? @relation(fields: [championshipId], references: [id], onDelete: SetNull)
   createdAt      DateTime      @default(now()) @map("created_at")
@@ -89,22 +108,37 @@ model News {
   @@map("news")
 }
 
+// Configurações gerais do site/clube (registro único, id = 1)
+model SiteSettings {
+  id           Int      @id @default(1)
+  clubName     String   @default("La Resenha FC") @map("club_name")
+  logoUrl      String?  @map("logo_url")
+  bannerUrl    String?  @map("banner_url") // imagem do banner da home
+  // Textos da seção de redes sociais da home
+  socialTitle    String? @map("social_title")
+  socialSubtitle String? @map("social_subtitle")
+  instagramUrl String?  @map("instagram_url")
+  // Somente dígitos, com DDI e DDD (ex: 5541999999999) — o link wa.me é montado no front
+  whatsappNumber String? @map("whatsapp_number")
+  youtubeUrl   String?  @map("youtube_url")
+  facebookUrl  String?  @map("facebook_url")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
+// Inscrição de um time em um campeonato. As estatísticas (pontos, jogos,
+// vitórias etc.) NÃO são armazenadas: são calculadas a partir das partidas.
 model Standing {
-  id             Int          @id @default(autoincrement())
-  championshipId Int          @map("championship_id")
-  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
-  teamId         Int          @map("team_id")
-  team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  position       Int
-  points         Int
-  played         Int
-  won            Int
-  drawn          Int
-  lost           Int
-  goalsFor       Int          @map("goals_for")
-  goalsAgainst   Int          @map("goals_against")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  id               Int          @id @default(autoincrement())
+  championshipId   Int          @map("championship_id")
+  championship     Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  teamId           Int          @map("team_id")
+  team             Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  // Ajuste manual de pontos (punições, W.O. etc.) somado ao total calculado
+  pointsAdjustment Int          @default(0) @map("points_adjustment")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
 
   @@unique([championshipId, teamId])
   @@map("standings")
