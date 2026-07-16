@@ -8,18 +8,38 @@ describe('StandingsService', () => {
   let service: StandingsService;
   let prisma: PrismaService;
 
-  const mockStanding = {
+  const mockChampionship = {
+    id: 1,
+    name: 'Liga Amadora 2026',
+    pointsPerWin: 3,
+    pointsPerDraw: 1,
+    pointsPerLoss: 0,
+    tiebreakers: ['wins', 'goalDiff', 'goalsFor', 'headToHead'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockTeamA = { id: 2, name: 'Resenha FC', isOwnClub: true };
+  const mockTeamB = { id: 3, name: 'Tabajara FC', isOwnClub: false };
+
+  const mockEnrollmentA = {
     id: 1,
     championshipId: 1,
     teamId: 2,
-    position: 1,
-    points: 15,
-    played: 5,
-    won: 5,
-    drawn: 0,
-    lost: 0,
-    goalsFor: 15,
-    goalsAgainst: 2,
+    pointsAdjustment: 0,
+    team: mockTeamA,
+    championship: mockChampionship,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockEnrollmentB = {
+    id: 2,
+    championshipId: 1,
+    teamId: 3,
+    pointsAdjustment: 0,
+    team: mockTeamB,
+    championship: mockChampionship,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -35,9 +55,13 @@ describe('StandingsService', () => {
     },
     championship: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
     },
     team: {
       findUnique: jest.fn(),
+    },
+    match: {
+      findMany: jest.fn(),
     },
   };
 
@@ -65,82 +89,88 @@ describe('StandingsService', () => {
   });
 
   describe('create', () => {
-    it('should create a standing and return it', async () => {
+    it('inscreve um time no campeonato', async () => {
       const dto: CreateStandingDto = {
         championshipId: 1,
         teamId: 2,
-        position: 1,
-        points: 15,
-        played: 5,
-        won: 5,
-        drawn: 0,
-        lost: 0,
-        goalsFor: 15,
-        goalsAgainst: 2,
+        pointsAdjustment: 0,
       };
 
-      mockPrismaService.championship.findUnique.mockResolvedValue({ id: 1, name: 'Liga Amadora 2026' });
-      mockPrismaService.team.findUnique.mockResolvedValue({ id: 2, name: 'Resenha FC' });
+      mockPrismaService.championship.findUnique.mockResolvedValue(mockChampionship);
+      mockPrismaService.team.findUnique.mockResolvedValue(mockTeamA);
       mockPrismaService.standing.findUnique.mockResolvedValue(null);
-      mockPrismaService.standing.create.mockResolvedValue(mockStanding);
+      mockPrismaService.standing.create.mockResolvedValue(mockEnrollmentA);
 
       const result = await service.create(dto);
 
-      expect(prisma.championship.findUnique).toHaveBeenCalledWith({ where: { id: dto.championshipId } });
-      expect(prisma.team.findUnique).toHaveBeenCalledWith({ where: { id: dto.teamId } });
-      expect(prisma.standing.findUnique).toHaveBeenCalledWith({
-        where: {
-          championshipId_teamId: {
-            championshipId: dto.championshipId,
-            teamId: dto.teamId,
-          },
-        },
-      });
       expect(prisma.standing.create).toHaveBeenCalledWith({
         data: {
-          championshipId: dto.championshipId,
-          teamId: dto.teamId,
-          position: dto.position,
-          points: dto.points,
-          played: dto.played,
-          won: dto.won,
-          drawn: dto.drawn,
-          lost: dto.lost,
-          goalsFor: dto.goalsFor,
-          goalsAgainst: dto.goalsAgainst,
+          championshipId: 1,
+          teamId: 2,
+          pointsAdjustment: 0,
         },
         include: {
           championship: true,
           team: true,
         },
       });
-      expect(result).toEqual(mockStanding);
+      expect(result).toEqual(mockEnrollmentA);
+    });
+
+    it('rejeita inscrição duplicada', async () => {
+      mockPrismaService.championship.findUnique.mockResolvedValue(mockChampionship);
+      mockPrismaService.team.findUnique.mockResolvedValue(mockTeamA);
+      mockPrismaService.standing.findUnique.mockResolvedValue(mockEnrollmentA);
+
+      await expect(
+        service.create({ championshipId: 1, teamId: 2 }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('findAll', () => {
-    it('should return an array of standings ordered by position asc', async () => {
-      mockPrismaService.standing.findMany.mockResolvedValue([mockStanding]);
+    it('calcula a tabela a partir das partidas com placar', async () => {
+      mockPrismaService.championship.findMany.mockResolvedValue([mockChampionship]);
+      mockPrismaService.standing.findMany.mockResolvedValue([
+        mockEnrollmentA,
+        mockEnrollmentB,
+      ]);
+      mockPrismaService.match.findMany.mockResolvedValue([
+        { homeTeamId: 2, awayTeamId: 3, homeScore: 2, awayScore: 0 },
+      ]);
 
       const result = await service.findAll();
 
-      expect(prisma.standing.findMany).toHaveBeenCalledWith({
-        include: {
-          championship: true,
-          team: true,
-        },
-        orderBy: [
-          { championshipId: 'asc' },
-          { position: 'asc' },
-        ],
-      });
-      expect(result).toEqual([mockStanding]);
+      expect(result).toHaveLength(2);
+      const first = result[0];
+      expect(first.teamId).toBe(2); // Resenha venceu => 1º
+      expect(first.position).toBe(1);
+      expect(first.points).toBe(3);
+      expect(first.played).toBe(1);
+      expect(first.won).toBe(1);
+      expect(first.goalsFor).toBe(2);
+      expect(first.goalsAgainst).toBe(0);
+      expect(first.team).toEqual(mockTeamA);
+
+      const second = result[1];
+      expect(second.teamId).toBe(3);
+      expect(second.position).toBe(2);
+      expect(second.points).toBe(0);
+    });
+
+    it('retorna vazio para campeonato sem times inscritos', async () => {
+      mockPrismaService.championship.findMany.mockResolvedValue([mockChampionship]);
+      mockPrismaService.standing.findMany.mockResolvedValue([]);
+      mockPrismaService.match.findMany.mockResolvedValue([]);
+
+      const result = await service.findAll(1);
+      expect(result).toEqual([]);
     });
   });
 
   describe('findOne', () => {
     it('should return a standing if it exists', async () => {
-      mockPrismaService.standing.findUnique.mockResolvedValue(mockStanding);
+      mockPrismaService.standing.findUnique.mockResolvedValue(mockEnrollmentA);
 
       const result = await service.findOne(1);
 
@@ -151,7 +181,7 @@ describe('StandingsService', () => {
           team: true,
         },
       });
-      expect(result).toEqual(mockStanding);
+      expect(result).toEqual(mockEnrollmentA);
     });
 
     it('should throw NotFoundException if standing does not exist', async () => {
@@ -162,43 +192,23 @@ describe('StandingsService', () => {
   });
 
   describe('update', () => {
-    it('should update a standing and return the updated entity', async () => {
-      const dto = {
-        championshipId: 1,
-        teamId: 2,
-        position: 2,
-        points: 12,
-        played: 5,
-        won: 4,
-        drawn: 0,
-        lost: 1,
-        goalsFor: 12,
-        goalsAgainst: 4,
-      };
+    it('atualiza apenas o ajuste manual de pontos', async () => {
+      const updated = { ...mockEnrollmentA, pointsAdjustment: -3 };
 
-      const updatedStanding = { ...mockStanding, ...dto };
+      mockPrismaService.standing.findUnique.mockResolvedValue(mockEnrollmentA);
+      mockPrismaService.standing.update.mockResolvedValue(updated);
 
-      mockPrismaService.standing.findUnique.mockResolvedValue(mockStanding);
-      mockPrismaService.standing.update.mockResolvedValue(updatedStanding);
+      const result = await service.update(1, { pointsAdjustment: -3 });
 
-      const result = await service.update(1, dto);
-
-      expect(prisma.standing.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
-        include: {
-          championship: true,
-          team: true,
-        },
-      });
       expect(prisma.standing.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: dto,
+        data: { pointsAdjustment: -3 },
         include: {
           championship: true,
           team: true,
         },
       });
-      expect(result).toEqual(updatedStanding);
+      expect(result).toEqual(updated);
     });
 
     it('should throw NotFoundException if standing does not exist', async () => {
@@ -210,22 +220,15 @@ describe('StandingsService', () => {
 
   describe('remove', () => {
     it('should delete a standing and return the deleted entity', async () => {
-      mockPrismaService.standing.findUnique.mockResolvedValue(mockStanding);
-      mockPrismaService.standing.delete.mockResolvedValue(mockStanding);
+      mockPrismaService.standing.findUnique.mockResolvedValue(mockEnrollmentA);
+      mockPrismaService.standing.delete.mockResolvedValue(mockEnrollmentA);
 
       const result = await service.remove(1);
 
-      expect(prisma.standing.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
-        include: {
-          championship: true,
-          team: true,
-        },
-      });
       expect(prisma.standing.delete).toHaveBeenCalledWith({
         where: { id: 1 },
       });
-      expect(result).toEqual(mockStanding);
+      expect(result).toEqual(mockEnrollmentA);
     });
 
     it('should throw NotFoundException if standing does not exist', async () => {

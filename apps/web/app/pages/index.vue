@@ -1,21 +1,14 @@
 <template>
   <div class="landing-page">
-    <!-- Hero Section -->
-    <section class="hero-section">
+    <!-- Hero Section (banner configurável no admin; só aparece se configurado) -->
+    <section v-if="settings.bannerUrl" class="hero-section">
       <div class="hero-bg-wrapper">
-        <img 
-          class="hero-image" 
-          alt="Gritty action shot of a futsal court at night" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4D68Rd5aIBjKImYAiB3Onxdr7UWo6GaXWavF1F5vGZYBGSO_XQkoY67Aaf1h7SDBl7nQUAfkh-5AtqzWjEqKS9P6fhti7uHXpg2cWs_BWSs2-drc5eLhn6Ld0SOLDVfy_WU0YjVkL_Wx-w__GwmVZKtgT_lyGSzKaeV6ZP_ITObyq6yFMG5jEq9_us-rDkMQjqHFsxWkqG06ZLXXnpDpVLseXhHGsZMEmOTe_8aO-jUhucivNl55bLZUm4n-3882dOccr44JqKDw"
+        <img
+          class="hero-image"
+          :alt="settings.clubName"
+          :src="settings.bannerUrl"
         />
-        <div class="hero-overlay"></div>
         <div class="grainy-overlay absolute inset-0"></div>
-      </div>
-      <div class="hero-content">
-        <h1 class="hero-title">
-          RESPEITA A NOSSA HISTÓRIA
-        </h1>
-        <p class="hero-subtitle">O mais tradicional da região</p>
       </div>
     </section>
 
@@ -157,33 +150,37 @@
       </div>
     </div>
 
-    <!-- Social Banner Section -->
-    <section class="social-banner">
+    <!-- Social Banner Section (só aparece se houver link cadastrado) -->
+    <section v-if="socialLinks.length > 0" class="social-banner">
       <div class="social-container">
         <div class="social-text">
-          <h2 class="social-title">FAÇA PARTE DA NOSSA QUADRA</h2>
+          <h2 class="social-title">{{ settings.socialTitle || 'FAÇA PARTE DA NOSSA QUADRA' }}</h2>
           <p class="social-subtitle">
-            Apoie o futsal local. Siga nossas redes para acompanhar os dribles em tempo real e os bastidores do ginásio.
+            {{ settings.socialSubtitle || 'Apoie o futsal local. Siga nossas redes para acompanhar os dribles em tempo real e os bastidores do ginásio.' }}
           </p>
         </div>
         <div class="social-buttons">
-          <button class="social-btn social-btn-instagram" @click="handleInstagram">Instagram</button>
-          <button class="social-btn social-btn-whatsapp" @click="handleWhatsApp">WhatsApp</button>
+          <a
+            v-for="link in socialLinks"
+            :key="link.key"
+            :href="link.url"
+            target="_blank"
+            rel="noopener"
+            :class="['social-btn', `social-btn-${link.key}`]"
+          >
+            {{ link.label }}
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- FAB for Quick Actions -->
-    <button class="fab-button" title="Marcar Amistoso" @click="handleMarcarAmistoso">
-      <span class="material-symbols-outlined text-3xl">add</span>
-      <span class="fab-tooltip">Marcar Amistoso</span>
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useHead, useApi } from '#imports';
+import { useSiteSettings } from '~/composables/useSiteSettings';
 
 useHead({
   title: 'La Resenha FC - Várzea Raiz',
@@ -193,6 +190,7 @@ useHead({
 });
 
 const { request, apiBase } = useApi();
+const { settings, load: loadSettings } = useSiteSettings();
 
 // --- STATE VARIABLES ---
 
@@ -272,17 +270,17 @@ const truncateText = (text: string, length: number) => {
 
 // --- ACTION HANDLERS ---
 
-const handleInstagram = () => {
-  window.open('https://instagram.com/la_resenha_fc', '_blank');
-};
+// Botões de redes sociais montados a partir das configurações do admin
+const socialLinks = computed(() => {
+  const links: { key: string; label: string; url: string }[] = [];
+  if (settings.value.instagramUrl) links.push({ key: 'instagram', label: 'Instagram', url: settings.value.instagramUrl });
+  const whatsappDigits = (settings.value.whatsappNumber || '').replace(/\D/g, '');
+  if (whatsappDigits) links.push({ key: 'whatsapp', label: 'WhatsApp', url: `https://wa.me/${whatsappDigits}` });
+  if (settings.value.youtubeUrl) links.push({ key: 'youtube', label: 'YouTube', url: settings.value.youtubeUrl });
+  if (settings.value.facebookUrl) links.push({ key: 'facebook', label: 'Facebook', url: settings.value.facebookUrl });
+  return links;
+});
 
-const handleWhatsApp = () => {
-  window.open('https://wa.me/5541999999999?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20o%20La%20Resenha%20FC!', '_blank');
-};
-
-const handleMarcarAmistoso = () => {
-  window.open('https://wa.me/5541999999999?text=Olá!%20Gostaria%20de%20marcar%20um%20amistoso%20com%20o%20La%20Resenha%20FC.', '_blank');
-};
 
 const handleVerLocalizacao = () => {
   if (nextMatch.value) {
@@ -306,7 +304,11 @@ const loadApiData = async () => {
     const matchesList = Array.isArray(matchesResponse) ? matchesResponse : (matchesResponse?.data || []);
     
     if (matchesList.length > 0) {
-      const sorted = [...matchesList].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      // Considera apenas confrontos do La Resenha (partidas de outros times não aparecem aqui)
+      const ourMatches = matchesList.filter((m: any) =>
+        m.homeTeam?.isOwnClub || m.awayTeam?.isOwnClub || (!m.homeTeam && !m.awayTeam)
+      );
+      const sorted = [...ourMatches].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       const now = new Date();
       const future = sorted.find(m => new Date(m.date) > now);
       if (future) {
@@ -349,6 +351,7 @@ const loadApiData = async () => {
 };
 
 onMounted(async () => {
+  loadSettings();
   await loadApiData();
 });
 </script>
@@ -390,51 +393,6 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(40%) contrast(1.25);
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-}
-
-.hero-content {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 0 var(--space-margin-mobile);
-}
-
-.hero-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 2.5rem; /* 40px on mobile */
-  font-weight: 700;
-  color: var(--color-tertiary);
-  text-transform: uppercase;
-  line-height: 1.1;
-  letter-spacing: -0.05em; /* tracking-tighter */
-  text-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
-}
-
-@media (min-width: 768px) {
-  .hero-title {
-    font-size: 5rem; /* 80px on desktop */
-  }
-}
-
-.hero-subtitle {
-  margin-top: 16px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1rem; /* font-label-lg = 16px */
-  font-weight: 600;
-  color: var(--color-goal-white);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: inline-block;
-  padding: 8px 16px;
-  border: 2px solid var(--color-tertiary);
 }
 
 /* ==========================================
@@ -902,30 +860,44 @@ onMounted(async () => {
 
 .social-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
 .social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 16px 32px;
   border: 4px solid var(--color-asphalt);
   font-family: 'Oswald', sans-serif;
   font-size: 1.5rem; /* headline-md = 24px */
   font-weight: 600;
   text-transform: uppercase;
+  text-decoration: none;
   cursor: pointer;
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
   transition: all 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .social-btn-instagram {
   background-color: var(--color-tertiary);
   color: var(--color-asphalt);
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
 }
 
 .social-btn-whatsapp {
   background-color: var(--color-secondary);
   color: var(--color-asphalt);
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.social-btn-youtube {
+  background-color: var(--color-goal-white);
+  color: var(--color-asphalt);
+}
+
+.social-btn-facebook {
+  background-color: var(--color-primary);
+  color: var(--color-asphalt);
 }
 
 .social-btn:hover {
@@ -933,53 +905,6 @@ onMounted(async () => {
   transform: translate(4px, 4px);
 }
 
-/* ==========================================
-   FAB BUTTON
-   ========================================== */
-.fab-button {
-  position: fixed;
-  bottom: 32px;
-  right: 32px;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background-color: var(--color-tertiary);
-  color: var(--color-asphalt);
-  border: 4px solid var(--color-asphalt);
-  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 99;
-  transition: all 0.15s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.fab-button:hover {
-  box-shadow: none;
-  transform: translate(4px, 4px);
-}
-
-.fab-tooltip {
-  position: absolute;
-  right: 80px;
-  background-color: var(--color-asphalt);
-  color: var(--color-tertiary);
-  padding: 4px 12px;
-  font-family: 'Oswald', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  border: 2px solid var(--color-tertiary);
-}
-
-.fab-button:hover .fab-tooltip {
-  opacity: 1;
-}
 /* ==========================================
    EMPTY STATES
    ========================================== */

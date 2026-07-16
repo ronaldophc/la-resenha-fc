@@ -1,9 +1,13 @@
-import { useRuntimeConfig, useCookie, navigateTo } from '#app';
+import { useRuntimeConfig, useCookie, useState, navigateTo } from '#app';
+
+/** Quantidade de requisições GET (carregamento de conteúdo) em andamento. */
+export const useApiPending = () => useState<number>('api-pending-count', () => 0);
 
 export const useApi = () => {
   const config = useRuntimeConfig();
   const token = useCookie('auth_token');
   const apiBase = config.public.apiBase || 'http://localhost:3001';
+  const pending = useApiPending();
 
   /**
    * Faz uma requisição HTTP para a API NestJS, injetando o token JWT automaticamente
@@ -22,6 +26,11 @@ export const useApi = () => {
     // Garante que o path comece com /
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
+    // GETs carregam conteúdo de página: alimentam o overlay global de loading.
+    // Ações (POST/PATCH/DELETE) têm feedback próprio nos botões.
+    const isContentLoad = !options.method || String(options.method).toUpperCase() === 'GET';
+    if (isContentLoad && process.client) pending.value++;
+
     try {
       return await $fetch<T>(`${apiBase}${cleanPath}`, {
         ...options,
@@ -36,6 +45,8 @@ export const useApi = () => {
         }
       }
       throw error;
+    } finally {
+      if (isContentLoad && process.client) pending.value = Math.max(0, pending.value - 1);
     }
   };
 

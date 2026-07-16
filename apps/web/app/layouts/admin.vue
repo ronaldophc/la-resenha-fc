@@ -4,12 +4,11 @@
     <header class="admin-topbar">
       <div class="admin-topbar-container">
         <NuxtLink to="/" class="brand-link">
-          <span class="badge">LR</span>
-          <span class="title">La Resenha FC <span class="subtitle">Painel do Diretor</span></span>
+          <img v-if="settings.logoUrl" :src="settings.logoUrl" :alt="settings.clubName" class="brand-logo" />
+          <span class="title">{{ settings.clubName }}</span>
         </NuxtLink>
-        
+
         <div class="user-info" v-if="user">
-          <span class="user-name">📋 {{ user.name || user.email }}</span>
           <VButton size="sm" variant="danger" @click="handleLogout">Sair</VButton>
         </div>
       </div>
@@ -37,6 +36,9 @@
           <NuxtLink to="/admin/times" class="sidebar-item" active-class="sidebar-active">
             🛡️ Gerenciar Times
           </NuxtLink>
+          <NuxtLink to="/admin/configuracoes" class="sidebar-item" active-class="sidebar-active">
+            ⚙️ Configurações
+          </NuxtLink>
           <div class="sidebar-separator"></div>
           <NuxtLink to="/" class="sidebar-item sidebar-back-link">
             ⬅️ Voltar ao Site
@@ -53,14 +55,21 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useAuth } from '#imports';
+import { useSiteSettings } from '~/composables/useSiteSettings';
 import VButton from '~/components/ui/VButton.vue';
 
 const { user, logout } = useAuth();
+const { settings, load: loadSettings } = useSiteSettings();
 
 const handleLogout = async () => {
   await logout();
 };
+
+onMounted(() => {
+  loadSettings();
+});
 </script>
 
 <style scoped>
@@ -103,20 +112,13 @@ const handleLogout = async () => {
   text-decoration: none;
 }
 
-.badge {
-  background-color: var(--color-tertiary);
-  color: var(--color-on-tertiary);
-  font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--color-goal-white);
-  border-radius: var(--radius-sm);
-  box-shadow: 1.5px 1.5px 0px var(--color-goal-white);
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 2px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-low);
 }
 
 .title {
@@ -128,24 +130,10 @@ const handleLogout = async () => {
   letter-spacing: 0.03em;
 }
 
-.subtitle {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.95rem;
-  color: var(--color-primary);
-  margin-left: 8px;
-}
-
 .user-info {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.user-name {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  font-size: 1.125rem;
-  color: var(--color-goal-white);
 }
 
 .admin-body {

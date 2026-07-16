@@ -24,38 +24,10 @@
         <form @submit.prevent="handleSubmit" class="match-form">
           <div class="form-grid">
             <div class="form-group">
-              <label for="opponentSelect">Adversário *</label>
-              <select 
-                v-model="opponentSelectValue" 
-                id="opponentSelect" 
-                required
-                class="form-input"
-              >
-                <option value="" disabled>Selecione um adversário</option>
-                <option v-for="team in filteredTeams" :key="team.id" :value="team.name">
-                  {{ team.name }}
-                </option>
-                <option value="custom">Outro (Digitar nome...)</option>
-              </select>
-            </div>
-
-            <div v-if="opponentSelectValue === 'custom'" class="form-group">
-              <label for="opponentCustom">Nome do Adversário *</label>
-              <input 
-                v-model="customOpponentName" 
-                type="text" 
-                id="opponentCustom" 
-                placeholder="Ex: Real Madrid da Várzea" 
-                required
-                class="form-input"
-              />
-            </div>
-
-            <div class="form-group">
               <label for="championshipId">Campeonato / Torneio (Opcional)</label>
-              <select 
-                v-model="form.championshipId" 
-                id="championshipId" 
+              <select
+                v-model="form.championshipId"
+                id="championshipId"
                 class="form-input"
               >
                 <option value="">Amistoso (Nenhum)</option>
@@ -63,14 +35,62 @@
                   {{ champ.name }}
                 </option>
               </select>
+              <p v-if="form.championshipId" class="form-help">
+                Partida de campeonato: os dois times precisam estar cadastrados.
+                O resultado entra automaticamente na tabela de classificação.
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label for="homeTeamId">Time Mandante *</label>
+              <select
+                v-model="form.homeTeamId"
+                id="homeTeamId"
+                required
+                class="form-input"
+              >
+                <option value="" disabled>Selecione o mandante</option>
+                <option v-for="team in teamsList" :key="team.id" :value="team.id">
+                  {{ team.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="awayTeamId">Time Visitante *</label>
+              <select
+                v-model="form.awayTeamId"
+                id="awayTeamId"
+                required
+                class="form-input"
+              >
+                <option value="" disabled>Selecione o visitante</option>
+                <option v-for="team in teamsList" :key="team.id" :value="team.id">
+                  {{ team.name }}
+                </option>
+                <option v-if="!form.championshipId" value="custom">Outro (Digitar nome...)</option>
+              </select>
+            </div>
+
+            <div v-if="form.awayTeamId === 'custom'" class="form-group">
+              <label for="opponentCustom">Nome do Adversário *</label>
+              <input
+                v-model="customOpponentName"
+                type="text"
+                id="opponentCustom"
+                placeholder="Ex: Real Madrid da Várzea"
+                required
+                class="form-input"
+              />
+              <p class="form-help">Disponível apenas para amistosos. Times de campeonato precisam estar cadastrados.</p>
             </div>
 
             <div class="form-group">
               <label for="date">Data e Horário *</label>
-              <input 
-                v-model="form.date" 
-                type="datetime-local" 
-                id="date" 
+              <input
+                v-model="form.date"
+                type="datetime-local"
+                id="date"
                 required
                 class="form-input"
               />
@@ -78,41 +98,42 @@
 
             <div class="form-group">
               <label for="location">Local / Campo *</label>
-              <input 
-                v-model="form.location" 
-                type="text" 
-                id="location" 
-                placeholder="Ex: Arena Várzea, Campo de Terra" 
+              <input
+                v-model="form.location"
+                type="text"
+                id="location"
+                placeholder="Ex: Arena Várzea, Campo de Terra"
                 required
                 class="form-input"
               />
             </div>
 
             <div class="form-group score-group">
-              <label>Placar do Jogo *</label>
+              <label>Placar do Jogo</label>
               <div class="score-inputs">
                 <div class="score-field">
-                  <span class="score-label">La Resenha FC</span>
-                  <input 
-                    v-model.number="form.homeScore" 
-                    type="number" 
-                    min="0" 
-                    required
+                  <span class="score-label">{{ homeTeamLabel }}</span>
+                  <input
+                    v-model.number="form.homeScore"
+                    type="number"
+                    min="0"
+                    placeholder="-"
                     class="form-input score-input-box"
                   />
                 </div>
                 <span class="score-divider">X</span>
                 <div class="score-field">
-                  <span class="score-label">Adversário</span>
-                  <input 
-                    v-model.number="form.awayScore" 
-                    type="number" 
-                    min="0" 
-                    required
+                  <span class="score-label">{{ awayTeamLabel }}</span>
+                  <input
+                    v-model.number="form.awayScore"
+                    type="number"
+                    min="0"
+                    placeholder="-"
                     class="form-input score-input-box"
                   />
                 </div>
               </div>
+              <p class="form-help">Deixe os dois campos vazios para partida agendada (ainda não realizada).</p>
             </div>
           </div>
 
@@ -143,7 +164,7 @@
           <thead>
             <tr>
               <th>Data</th>
-              <th>Adversário</th>
+              <th>Confronto</th>
               <th class="text-center">Placar</th>
               <th>Local</th>
               <th>Campeonato</th>
@@ -156,10 +177,13 @@
                 <span class="match-date">{{ formatDate(match.date) }}</span>
               </td>
               <td class="opponent-cell">
-                <span class="match-opponent">{{ match.opponent }}</span>
+                <span class="match-opponent">{{ formatMatchup(match) }}</span>
               </td>
               <td class="score-cell text-center">
-                <span :class="['score-badge', getMatchResultClass(match)]">
+                <span v-if="match.homeScore === null || match.homeScore === undefined" class="score-badge score-badge--scheduled">
+                  AGENDADO
+                </span>
+                <span v-else :class="['score-badge', getMatchResultClass(match)]">
                   {{ match.homeScore }} x {{ match.awayScore }}
                 </span>
               </td>
@@ -189,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
@@ -207,6 +231,7 @@ useHead({
 interface Team {
   id: number;
   name: string;
+  isOwnClub?: boolean;
 }
 
 interface Championship {
@@ -219,8 +244,12 @@ interface Match {
   date: string;
   opponent: string;
   location: string;
-  homeScore: number;
-  awayScore: number;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeamId?: number | null;
+  awayTeamId?: number | null;
+  homeTeam?: Team | null;
+  awayTeam?: Team | null;
   championshipId?: number | null;
   championship?: Championship | null;
 }
@@ -237,24 +266,52 @@ const editingId = ref<number | null>(null);
 const championshipsList = ref<Championship[]>([]);
 const teamsList = ref<Team[]>([]);
 
-const opponentSelectValue = ref('');
 const customOpponentName = ref('');
 
-const filteredTeams = computed(() => {
-  return teamsList.value.filter(team => {
-    const name = team.name.toLowerCase();
-    return !name.includes('la resenha');
-  });
-});
-
 const form = ref({
-  opponent: '',
+  homeTeamId: '' as number | '',
+  awayTeamId: '' as number | 'custom' | '',
   championshipId: '' as number | '',
   date: '',
   location: '',
-  homeScore: 0,
-  awayScore: 0
+  homeScore: '' as number | '',
+  awayScore: '' as number | ''
 });
+
+const ownClub = computed(() => teamsList.value.find(t => t.isOwnClub));
+
+const teamNameById = (id: number | '' | 'custom') => {
+  if (typeof id !== 'number') return null;
+  return teamsList.value.find(t => t.id === id)?.name || null;
+};
+
+const homeTeamLabel = computed(() => teamNameById(form.value.homeTeamId) || 'Mandante');
+const awayTeamLabel = computed(() =>
+  form.value.awayTeamId === 'custom'
+    ? (customOpponentName.value || 'Adversário')
+    : (teamNameById(form.value.awayTeamId) || 'Visitante')
+);
+
+// Adversário digitado só vale para amistoso: ao escolher campeonato, limpa
+watch(() => form.value.championshipId, (champId) => {
+  if (champId && form.value.awayTeamId === 'custom') {
+    form.value.awayTeamId = '';
+    customOpponentName.value = '';
+  }
+});
+
+// Pré-seleciona o La Resenha como mandante assim que os times carregarem
+watch(ownClub, (club) => {
+  if (club && !isEditing.value && form.value.homeTeamId === '') {
+    form.value.homeTeamId = club.id;
+  }
+});
+
+const formatMatchup = (match: Match) => {
+  const home = match.homeTeam?.name || (match.awayTeam ? null : 'La Resenha');
+  const away = match.awayTeam?.name || match.opponent;
+  return `${home || '?'} x ${away || '?'}`;
+};
 
 const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -311,14 +368,14 @@ const toggleForm = () => {
 
 const resetForm = () => {
   form.value = {
-    opponent: '',
+    homeTeamId: ownClub.value?.id ?? '',
+    awayTeamId: '',
     championshipId: '',
     date: '',
     location: '',
-    homeScore: 0,
-    awayScore: 0
+    homeScore: '',
+    awayScore: ''
   };
-  opponentSelectValue.value = '';
   customOpponentName.value = '';
   isEditing.value = false;
   editingId.value = null;
@@ -336,6 +393,7 @@ const formatDate = (dateStr: string) => {
 };
 
 const getMatchResultClass = (match: Match) => {
+  if (match.homeScore === null || match.awayScore === null) return 'score-badge--scheduled';
   if (match.homeScore > match.awayScore) return 'score-badge--win';
   if (match.homeScore < match.awayScore) return 'score-badge--loss';
   return 'score-badge--draw';
@@ -349,24 +407,15 @@ const startEdit = (match: Match) => {
   const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
 
   form.value = {
-    opponent: match.opponent,
+    homeTeamId: match.homeTeamId ?? (ownClub.value?.id ?? ''),
+    awayTeamId: match.awayTeamId ?? 'custom',
     championshipId: match.championshipId || '',
     date: localISOTime,
     location: match.location,
-    homeScore: match.homeScore,
-    awayScore: match.awayScore
+    homeScore: match.homeScore ?? '',
+    awayScore: match.awayScore ?? ''
   };
-
-  // Mapeia o nome do adversário de volta para o select ou custom input
-  const matchOpponent = match.opponent;
-  const teamExists = filteredTeams.value.some(t => t.name.toLowerCase() === matchOpponent.toLowerCase());
-  if (teamExists) {
-    opponentSelectValue.value = matchOpponent;
-    customOpponentName.value = '';
-  } else {
-    opponentSelectValue.value = 'custom';
-    customOpponentName.value = matchOpponent;
-  }
+  customOpponentName.value = match.awayTeamId ? '' : (match.opponent || '');
 
   editingId.value = match.id;
   isEditing.value = true;
@@ -384,31 +433,41 @@ const handleSubmit = async () => {
   feedback.value = null;
 
   try {
-    const opponentName = opponentSelectValue.value === 'custom'
-      ? customOpponentName.value
-      : opponentSelectValue.value;
+    const isCustomOpponent = form.value.awayTeamId === 'custom';
+    const hasHomeScore = form.value.homeScore !== '' && form.value.homeScore !== null;
+    const hasAwayScore = form.value.awayScore !== '' && form.value.awayScore !== null;
+
+    if (hasHomeScore !== hasAwayScore) {
+      showFeedback('error', 'Preencha o placar completo (os dois campos) ou deixe ambos vazios.');
+      submitting.value = false;
+      return;
+    }
 
     const payload = {
-      opponent: opponentName,
       championshipId: form.value.championshipId ? Number(form.value.championshipId) : null,
+      homeTeamId: form.value.homeTeamId ? Number(form.value.homeTeamId) : null,
+      awayTeamId: isCustomOpponent || !form.value.awayTeamId ? null : Number(form.value.awayTeamId),
+      opponent: isCustomOpponent ? customOpponentName.value : undefined,
       date: new Date(form.value.date).toISOString(),
       location: form.value.location,
-      homeScore: Number(form.value.homeScore),
-      awayScore: Number(form.value.awayScore)
+      homeScore: hasHomeScore ? Number(form.value.homeScore) : null,
+      awayScore: hasAwayScore ? Number(form.value.awayScore) : null
     };
+
+    const matchupLabel = `${homeTeamLabel.value} x ${awayTeamLabel.value}`;
 
     if (isEditing.value && editingId.value !== null) {
       await request(`/matches/${editingId.value}`, {
         method: 'PATCH',
         body: payload
       });
-      showFeedback('success', `Partida contra "${payload.opponent}" atualizada com sucesso!`);
+      showFeedback('success', `Partida "${matchupLabel}" atualizada com sucesso!`);
     } else {
       await request('/matches', {
         method: 'POST',
         body: payload
       });
-      showFeedback('success', `Partida contra "${payload.opponent}" registrada com sucesso!`);
+      showFeedback('success', `Partida "${matchupLabel}" registrada com sucesso!`);
     }
 
     resetForm();
@@ -745,8 +804,8 @@ onMounted(() => {
 }
 
 .score-badge--win {
-  background-color: var(--color-primary);
-  color: #000;
+  background-color: var(--color-vibrant-turf);
+  color: #052e16;
 }
 
 .score-badge--loss {
@@ -757,6 +816,12 @@ onMounted(() => {
 .score-badge--draw {
   background-color: #7f8c8d;
   color: #fff;
+}
+
+.score-badge--scheduled {
+  background-color: #ffca28;
+  color: #000;
+  font-size: 0.95rem;
 }
 
 .match-location {

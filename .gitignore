@@ -144,3 +144,8 @@ docs/design/
 
 # TinyMCE local assets
 apps/web/public/tinymce/
+
+# Docker
+.dockerignore
+docker-compose.yml
+Dockerfile.dev

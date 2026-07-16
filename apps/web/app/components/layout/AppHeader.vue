@@ -1,25 +1,21 @@
 <template>
   <header class="app-header">
-    <NuxtLink to="/" class="logo-link">
-      La Resenha FC
-    </NuxtLink>
-    
-    <!-- Desktop Nav -->
-    <nav class="nav-links">
-      <NuxtLink to="/" class="nav-item" active-class="nav-active">Home</NuxtLink>
-      <NuxtLink to="/elenco" class="nav-item" active-class="nav-active">Elenco</NuxtLink>
-      <NuxtLink to="/resultados" class="nav-item" active-class="nav-active">Resultados</NuxtLink>
-      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="nav-item" active-class="nav-active">Admin</NuxtLink>
-    </nav>
-    
-    <!-- Action Icons -->
-    <div class="action-icons">
-      <button class="icon-btn material-symbols-outlined" title="Notificações">notifications</button>
-      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="icon-btn material-symbols-outlined" title="Minha Conta">
-        account_circle
+    <div class="header-left">
+      <NuxtLink to="/" class="logo-link">
+        <img v-if="settings.logoUrl" :src="settings.logoUrl" :alt="settings.clubName" class="logo-img" />
+        {{ settings.clubName }}
       </NuxtLink>
-      
-      <!-- Mobile Menu Toggle -->
+
+      <!-- Desktop Nav -->
+      <nav class="nav-links">
+        <NuxtLink to="/" class="nav-item" active-class="nav-active">Home</NuxtLink>
+        <NuxtLink to="/elenco" class="nav-item" active-class="nav-active">Elenco</NuxtLink>
+        <NuxtLink to="/resultados" class="nav-item" active-class="nav-active">Campeonatos</NuxtLink>
+      </nav>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <div class="action-icons">
       <button class="mobile-menu-toggle material-symbols-outlined" aria-label="Toggle Menu" @click="toggleMobileMenu">
         {{ isMobileMenuOpen ? 'close' : 'menu' }}
       </button>
@@ -29,8 +25,7 @@
     <div v-show="isMobileMenuOpen" class="mobile-nav">
       <NuxtLink to="/" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Home</NuxtLink>
       <NuxtLink to="/elenco" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Elenco</NuxtLink>
-      <NuxtLink to="/resultados" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Resultados</NuxtLink>
-      <NuxtLink :to="isAuthenticated ? '/admin' : '/admin/login'" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Admin</NuxtLink>
+      <NuxtLink to="/resultados" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Campeonatos</NuxtLink>
       <template v-if="isAuthenticated">
         <button class="mobile-nav-item logout-btn" @click="handleLogout">Sair da Conta</button>
       </template>
@@ -39,11 +34,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuth } from '#imports';
+import { useSiteSettings } from '~/composables/useSiteSettings';
 
 const { isAuthenticated, logout } = useAuth();
+const { settings, load: loadSettings } = useSiteSettings();
 const isMobileMenuOpen = ref(false);
+
+onMounted(() => {
+  loadSettings();
+});
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
@@ -82,26 +83,46 @@ const handleLogout = async () => {
   }
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  min-width: 0;
+}
+
 .logo-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: 'Oswald', sans-serif;
-  font-size: 2.25rem; /* 36px on mobile */
+  font-size: 1.35rem;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--color-tertiary);
   text-decoration: none;
-  letter-spacing: -0.05em; /* tracking-tighter */
+  letter-spacing: -0.03em;
   line-height: 1.1;
   transition: transform 0.1s ease;
+  white-space: nowrap;
 }
 
 @media (min-width: 768px) {
   .logo-link {
-    font-size: 3rem; /* 48px on desktop (headline-xl) */
+    font-size: 1.6rem;
   }
 }
 
 .logo-link:active {
   transform: translate(2px, 2px);
+}
+
+.logo-img {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 2px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-low);
 }
 
 .nav-links {
@@ -139,7 +160,7 @@ const handleLogout = async () => {
   color: var(--color-tertiary);
   border-bottom: 4px solid var(--color-tertiary);
   font-family: 'Oswald', sans-serif;
-  font-size: 1.5rem; /* headline-lg is 32px, but 24px/1.5rem fits better in header height */
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
@@ -147,24 +168,6 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.icon-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-primary); /* text-primary */
-  font-size: 24px;
-  padding: 8px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-btn:hover {
-  background-color: var(--color-surface-container-high);
 }
 
 .mobile-menu-toggle {
