@@ -36,14 +36,8 @@
             </div>
 
             <div class="form-group">
-              <label for="logoUrl">Link do Logo (Opcional)</label>
-              <input
-                v-model="form.logoUrl"
-                type="url"
-                id="logoUrl"
-                placeholder="Ex: https://imagens.com/logo-champ.png"
-                class="form-input"
-              />
+              <label>Logo do Campeonato (Opcional)</label>
+              <ImageUpload v-model="form.logoUrl" label="Logo do campeonato" />
             </div>
           </div>
 
@@ -172,6 +166,7 @@ import { useHead, definePageMeta, navigateTo } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
   layout: 'admin',
