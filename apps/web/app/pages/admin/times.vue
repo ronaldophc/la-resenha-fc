@@ -36,14 +36,8 @@
             </div>
 
             <div class="form-group">
-              <label for="logoUrl">Link do Escudo / Logo (Opcional)</label>
-              <input 
-                v-model="form.logoUrl" 
-                type="url" 
-                id="logoUrl" 
-                placeholder="Ex: https://imagens.com/escudo.png" 
-                class="form-input"
-              />
+              <label>Escudo / Logo (Opcional)</label>
+              <ImageUpload v-model="form.logoUrl" label="Escudo do time" />
             </div>
           </div>
 
@@ -115,6 +109,7 @@ import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
   layout: 'admin',

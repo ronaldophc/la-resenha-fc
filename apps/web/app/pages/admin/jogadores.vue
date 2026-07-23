@@ -60,14 +60,8 @@
             </div>
 
             <div class="form-group">
-              <label for="photoUrl">Link da Foto (Opcional)</label>
-              <input 
-                v-model="form.photoUrl" 
-                type="url" 
-                id="photoUrl" 
-                placeholder="Ex: https://imagens.com/jogador.jpg" 
-                class="form-input"
-              />
+              <label>Foto do Jogador (Opcional)</label>
+              <ImageUpload v-model="form.photoUrl" label="Foto do jogador" />
             </div>
           </div>
 
@@ -148,6 +142,7 @@ import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
   layout: 'admin',

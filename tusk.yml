@@ -1,0 +1,48 @@
+interpreter: bash -c
+
+tasks:
+  up:
+    usage: Sobe os containers Docker (sem iniciar os servidores)
+    run: docker compose up -d
+
+  down:
+    usage: Derruba os containers
+    run: docker compose down
+
+  api:
+    usage: Inicia a API NestJS (porta 3001)
+    description: Garante os containers de pé e roda o Nest em modo watch.
+    run:
+      - task: up
+      - command: docker compose exec api npm run dev:api
+
+  web:
+    usage: Inicia o front Nuxt (porta 3000)
+    description: Garante os containers de pé e roda o Nuxt em modo dev.
+    run:
+      - task: up
+      - command: docker compose exec web npm run dev:web
+
+  shell-api:
+    usage: Abre um shell dentro do container da API
+    run: docker compose exec api sh
+
+  shell-web:
+    usage: Abre um shell dentro do container do front
+    run: docker compose exec web sh
+
+  logs:
+    usage: Mostra os logs dos containers (Ctrl+C para sair)
+    run: docker compose logs -f
+
+  install:
+    usage: Reinstala as dependências do monorepo
+    run: docker compose run --rm deps npm install
+
+  prisma-generate:
+    usage: Regenera o Prisma Client
+    run: docker compose exec api npm run prisma:generate -w apps/api
+
+  test-api:
+    usage: Roda a suíte de testes da API
+    run: docker compose run --rm deps npm test -w apps/api

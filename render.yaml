@@ -8,9 +8,21 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      # Use o endpoint DIRETO do Neon (sem "-pooler") para a API se recuperar
+      # sozinha quando o banco hiberna. Definido no painel do Render.
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRATION
         value: 8h
+      # Cloudinary (upload de imagens) — segredos definidos no painel do Render
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Pasta que isola as imagens deste projeto de outros sistemas na mesma conta
+      - key: CLOUDINARY_FOLDER
+        value: la-resenha-fc

@@ -40,14 +40,8 @@
             </div>
 
             <div class="form-group">
-              <label for="imageUrl">URL da Imagem de Destaque (Opcional)</label>
-              <input 
-                v-model="form.imageUrl" 
-                type="url" 
-                id="imageUrl" 
-                placeholder="Ex: https://imagens.com/noticia-destaque.jpg" 
-                class="form-input"
-              />
+              <label>Imagem de Destaque (Opcional)</label>
+              <ImageUpload v-model="form.imageUrl" label="Imagem de destaque" />
             </div>
 
             <div class="form-group">
@@ -94,11 +88,6 @@
               </span>
             </div>
 
-            <!-- Preview da Imagem de Destaque -->
-            <div v-if="form.imageUrl" class="image-preview-wrapper form-group--full">
-              <span class="preview-label">Pré-visualização da Imagem:</span>
-              <img :src="form.imageUrl" alt="Preview da imagem de destaque" class="image-preview" @error="handleImageError"/>
-            </div>
           </div>
 
           <div class="form-actions">
@@ -161,6 +150,7 @@ import Editor from '@tinymce/tinymce-vue';
 import { useApi } from '~/composables/useApi';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
   layout: 'admin',
@@ -268,11 +258,6 @@ const getExcerpt = (text: string, length = 120) => {
   const plainText = text ? text.replace(/<[^>]*>/g, '') : '';
   if (plainText.length <= length) return plainText;
   return plainText.slice(0, length) + '...';
-};
-
-const handleImageError = (e: Event) => {
-  const img = e.target as HTMLImageElement;
-  img.src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=600&auto=format&fit=crop';
 };
 
 const startEdit = (news: News) => {
@@ -530,33 +515,6 @@ onMounted(() => {
   font-style: italic;
 }
 
-.image-preview-wrapper {
-  background-color: var(--color-surface-container-low);
-  padding: 16px;
-  border: 2px dashed var(--color-outline-variant);
-  border-radius: var(--radius-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.preview-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  text-transform: uppercase;
-  color: #a3a3a3;
-}
-
-.image-preview {
-  max-width: 100%;
-  max-height: 240px;
-  object-fit: cover;
-  border: 3px solid var(--color-asphalt);
-  border-radius: var(--radius-sm);
-  box-shadow: 3px 3px 0px var(--color-asphalt);
-  align-self: flex-start;
-}
 
 .form-actions {
   display: flex;
