@@ -38,34 +38,16 @@
           </div>
 
           <div class="form-group">
-            <label for="logoUrl">Link do Logo</label>
-            <input
-              v-model="form.logoUrl"
-              type="url"
-              id="logoUrl"
-              placeholder="https://imagens.com/logo.png"
-              class="form-input"
-            />
+            <label>Logo do Time</label>
+            <ImageUpload v-model="form.logoUrl" label="Logo do time" />
           </div>
 
           <div class="form-group">
-            <label for="bannerUrl">Link do Banner da Home</label>
-            <input
-              v-model="form.bannerUrl"
-              type="url"
-              id="bannerUrl"
-              placeholder="https://imagens.com/banner.jpg"
-              class="form-input"
-            />
+            <label>Banner da Home</label>
+            <ImageUpload v-model="form.bannerUrl" label="Banner da home" />
             <p class="form-help">Imagem grande exibida no topo da página inicial (ideal: horizontal, ex. 1600x600).</p>
           </div>
 
-        </div>
-
-        <div v-if="form.logoUrl" class="logo-preview">
-          <span class="logo-preview-label">Prévia do logo:</span>
-          <img :src="form.logoUrl" alt="Prévia do logo" class="logo-preview-img" @error="logoError = true" @load="logoError = false" />
-          <span v-if="logoError" class="logo-preview-error">⚠️ Não foi possível carregar a imagem desse link.</span>
         </div>
 
         <h3 class="form-section-title">Seção de Redes Sociais (Home)</h3>
@@ -131,6 +113,7 @@ import { useApi } from '~/composables/useApi';
 import { useSiteSettings } from '~/composables/useSiteSettings';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
   layout: 'admin',
@@ -146,7 +129,6 @@ const { load: reloadSiteSettings } = useSiteSettings();
 
 const loading = ref(true);
 const submitting = ref(false);
-const logoError = ref(false);
 
 const form = ref({
   clubName: '',
@@ -353,39 +335,6 @@ onMounted(() => {
   font-size: 0.95rem;
   color: #a3a3a3;
   margin: 4px 0 0 0;
-}
-
-.logo-preview {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 16px;
-  padding: 12px;
-  background-color: var(--color-surface-container-low);
-  border: 2px dashed var(--color-outline-variant);
-  border-radius: var(--radius-sm);
-}
-
-.logo-preview-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.95rem;
-  color: #a3a3a3;
-}
-
-.logo-preview-img {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  border-radius: 50%;
-  border: 2px solid var(--color-outline-variant);
-  background-color: #262626;
-}
-
-.logo-preview-error {
-  font-size: 0.95rem;
-  color: var(--color-error-red);
 }
 
 .form-actions {

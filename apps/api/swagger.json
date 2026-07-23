@@ -1423,6 +1423,48 @@
           "settings"
         ]
       }
+    },
+    "/uploads": {
+      "post": {
+        "operationId": "UploadsController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Imagem enviada; retorna { url }"
+          },
+          "400": {
+            "description": "Arquivo inválido ou muito grande"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Envia uma imagem e retorna a URL hospedada (Apenas ADMIN)",
+        "tags": [
+          "uploads"
+        ]
+      }
     }
   },
   "info": {

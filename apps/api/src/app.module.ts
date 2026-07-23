@@ -13,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import { TeamsModule } from './teams/teams.module';
 import { ChampionshipsModule } from './championships/championships.module';
 import { SettingsModule } from './settings/settings.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SettingsModule } from './settings/settings.module';
     TeamsModule,
     ChampionshipsModule,
     SettingsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
