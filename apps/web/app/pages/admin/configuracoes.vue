@@ -7,13 +7,6 @@
       </div>
     </div>
 
-    <!-- Alertas de Feedback -->
-    <div v-if="feedback" :class="['feedback-alert', `feedback-alert--${feedback.type}`]">
-      <span class="feedback-icon">{{ feedback.type === 'success' ? '✅' : '⚠️' }}</span>
-      <span class="feedback-message">{{ feedback.message }}</span>
-      <button @click="feedback = null" class="feedback-close">×</button>
-    </div>
-
     <div v-if="loading" class="loading-state">
       <span class="loading-spinner">⚽</span>
       <p>Carregando configurações...</p>
@@ -110,6 +103,7 @@
 import { ref, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
+import { useToast } from '~/composables/useToast';
 import { useSiteSettings } from '~/composables/useSiteSettings';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
@@ -142,17 +136,11 @@ const form = ref({
   facebookUrl: ''
 });
 
-const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
+const toast = useToast();
 
 const showFeedback = (type: 'success' | 'error', message: string) => {
-  feedback.value = { type, message };
-  if (type === 'success') {
-    setTimeout(() => {
-      if (feedback.value?.message === message) {
-        feedback.value = null;
-      }
-    }, 5000);
-  }
+  if (type === 'success') toast.success(message);
+  else toast.error(message);
 };
 
 const loadSettings = async () => {
@@ -181,7 +169,6 @@ const loadSettings = async () => {
 
 const handleSubmit = async () => {
   submitting.value = true;
-  feedback.value = null;
 
   try {
     await request('/settings', {

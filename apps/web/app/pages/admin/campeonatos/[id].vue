@@ -41,13 +41,6 @@
         </VButton>
       </div>
 
-      <!-- Alertas de Feedback -->
-      <div v-if="feedback" :class="['feedback-alert', `feedback-alert--${feedback.type}`]">
-        <span class="feedback-icon">{{ feedback.type === 'success' ? '✅' : '⚠️' }}</span>
-        <span class="feedback-message">{{ feedback.message }}</span>
-        <button @click="feedback = null" class="feedback-close">×</button>
-      </div>
-
       <!-- Formulário de Cadastro / Edição de Registro na Tabela -->
       <transition name="slide-fade">
         <VCard v-if="showForm" class="standing-form-card" variant="featured">
@@ -185,6 +178,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
+import { useToast } from '~/composables/useToast';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
 
@@ -251,17 +245,11 @@ const availableTeams = computed(() => {
   return globalTeams.value.filter(t => !enrolledIds.has(t.id));
 });
 
-const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
+const toast = useToast();
 
 const showFeedback = (type: 'success' | 'error', message: string) => {
-  feedback.value = { type, message };
-  if (type === 'success') {
-    setTimeout(() => {
-      if (feedback.value?.message === message) {
-        feedback.value = null;
-      }
-    }, 5000);
-  }
+  if (type === 'success') toast.success(message);
+  else toast.error(message);
 };
 
 const loadChampionshipDetails = async () => {
@@ -329,7 +317,6 @@ const cancelEdit = () => {
 
 const handleSubmit = async () => {
   submitting.value = true;
-  feedback.value = null;
 
   try {
     if (isEditing.value && editingStandingId.value !== null) {
