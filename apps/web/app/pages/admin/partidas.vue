@@ -5,15 +5,13 @@
         <h1>Gerenciar Partidas</h1>
         <p class="page-subtitle">Cadastre os resultados e as informações de confrontos do La Resenha FC.</p>
       </div>
-      <VButton @click="toggleForm" variant="primary" class="new-match-btn">
-        {{ showForm ? 'Fechar Formulário ✖' : 'Nova Partida ⚽' }}
+      <VButton @click="openForm" variant="primary" class="new-match-btn">
+        Nova Partida ⚽
       </VButton>
     </div>
 
     <!-- Formulário de Cadastro / Edição -->
-    <transition name="slide-fade">
-      <VCard v-if="showForm" class="match-form-card" variant="featured">
-        <h2 class="form-title">{{ isEditing ? 'Editar Partida' : 'Registrar Nova Partida' }}</h2>
+    <VModal v-model="showForm" :title="isEditing ? 'Editar Partida' : 'Registrar Nova Partida'">
         <form @submit.prevent="handleSubmit" class="match-form">
           <div class="form-grid">
             <div class="form-group">
@@ -128,6 +126,62 @@
               </div>
               <p class="form-help">Deixe os dois campos vazios para partida agendada (ainda não realizada).</p>
             </div>
+
+            <!-- Campos de mata-mata / grupos (só para partidas de campeonato) -->
+            <template v-if="form.championshipId">
+              <div class="form-group">
+                <label for="phase">Fase (mata-mata)</label>
+                <input
+                  v-model="form.phase"
+                  type="text"
+                  id="phase"
+                  maxlength="60"
+                  placeholder="Ex: Final, Semifinal, Oitavas"
+                  class="form-input"
+                />
+                <p class="form-help">Preencha em jogos de mata-mata. Deixe vazio em pontos corridos.</p>
+              </div>
+
+              <div class="form-group">
+                <label for="matchGroup">Grupo (fase de grupos)</label>
+                <input
+                  v-model="form.groupName"
+                  type="text"
+                  id="matchGroup"
+                  maxlength="30"
+                  placeholder="Ex: A"
+                  class="form-input"
+                />
+                <p class="form-help">Preencha em jogos de fase de grupos (entra na tabela do grupo).</p>
+              </div>
+
+              <div class="form-group score-group">
+                <label>Pênaltis (se houve disputa)</label>
+                <div class="score-inputs">
+                  <div class="score-field">
+                    <span class="score-label">{{ homeTeamLabel }}</span>
+                    <input
+                      v-model.number="form.homePenalties"
+                      type="number"
+                      min="0"
+                      placeholder="-"
+                      class="form-input score-input-box"
+                    />
+                  </div>
+                  <span class="score-divider">X</span>
+                  <div class="score-field">
+                    <span class="score-label">{{ awayTeamLabel }}</span>
+                    <input
+                      v-model.number="form.awayPenalties"
+                      type="number"
+                      min="0"
+                      placeholder="-"
+                      class="form-input score-input-box"
+                    />
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
 
           <div class="form-actions">
@@ -137,8 +191,7 @@
             </VButton>
           </div>
         </form>
-      </VCard>
-    </transition>
+    </VModal>
 
     <!-- Lista de Partidas -->
     <VCard class="matches-list-card">
@@ -167,7 +220,7 @@
           <tbody>
             <tr v-for="match in matches" :key="match.id">
               <td class="date-cell">
-                <span class="match-date">{{ formatDate(match.date) }}</span>
+                <span class="match-date">{{ formatDateTime(match.date) }}</span>
               </td>
               <td class="opponent-cell">
                 <span class="match-opponent">{{ formatMatchup(match) }}</span>
@@ -209,9 +262,11 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
-import { useToast } from '~/composables/useToast';
+import { useFeedback } from '~/composables/useFeedback';
+import { formatDateTime, toDatetimeLocal } from '~/utils/formatters';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import VModal from '~/components/ui/VModal.vue';
 
 definePageMeta({
   layout: 'admin',
@@ -240,6 +295,10 @@ interface Match {
   location: string;
   homeScore: number | null;
   awayScore: number | null;
+  homePenalties?: number | null;
+  awayPenalties?: number | null;
+  phase?: string | null;
+  groupName?: string | null;
   homeTeamId?: number | null;
   awayTeamId?: number | null;
   homeTeam?: Team | null;
@@ -269,7 +328,11 @@ const form = ref({
   date: '',
   location: '',
   homeScore: '' as number | '',
-  awayScore: '' as number | ''
+  awayScore: '' as number | '',
+  homePenalties: '' as number | '',
+  awayPenalties: '' as number | '',
+  phase: '',
+  groupName: ''
 });
 
 const ownClub = computed(() => teamsList.value.find(t => t.isOwnClub));
@@ -307,12 +370,7 @@ const formatMatchup = (match: Match) => {
   return `${home || '?'} x ${away || '?'}`;
 };
 
-const toast = useToast();
-
-const showFeedback = (type: 'success' | 'error', message: string) => {
-  if (type === 'success') toast.success(message);
-  else toast.error(message);
-};
+const { showFeedback, getErrorMessage } = useFeedback();
 
 const loadChampionships = async () => {
   try {
@@ -347,11 +405,9 @@ const loadMatches = async () => {
   }
 };
 
-const toggleForm = () => {
-  showForm.value = !showForm.value;
-  if (!showForm.value) {
-    resetForm();
-  }
+const openForm = () => {
+  resetForm();
+  showForm.value = true;
 };
 
 const resetForm = () => {
@@ -362,22 +418,15 @@ const resetForm = () => {
     date: '',
     location: '',
     homeScore: '',
-    awayScore: ''
+    awayScore: '',
+    homePenalties: '',
+    awayPenalties: '',
+    phase: '',
+    groupName: ''
   };
   customOpponentName.value = '';
   isEditing.value = false;
   editingId.value = null;
-};
-
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 };
 
 const getMatchResultClass = (match: Match) => {
@@ -388,20 +437,18 @@ const getMatchResultClass = (match: Match) => {
 };
 
 const startEdit = (match: Match) => {
-  // Formata a data de ISO string para YYYY-MM-DDTHH:MM exigido pelo input datetime-local
-  const d = new Date(match.date);
-  // Ajusta para o fuso horário local antes de formatar
-  const tzOffset = d.getTimezoneOffset() * 60000;
-  const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
-
   form.value = {
     homeTeamId: match.homeTeamId ?? (ownClub.value?.id ?? ''),
     awayTeamId: match.awayTeamId ?? 'custom',
     championshipId: match.championshipId || '',
-    date: localISOTime,
+    date: toDatetimeLocal(match.date),
     location: match.location,
     homeScore: match.homeScore ?? '',
-    awayScore: match.awayScore ?? ''
+    awayScore: match.awayScore ?? '',
+    homePenalties: match.homePenalties ?? '',
+    awayPenalties: match.awayPenalties ?? '',
+    phase: match.phase || '',
+    groupName: match.groupName || ''
   };
   customOpponentName.value = match.awayTeamId ? '' : (match.opponent || '');
 
@@ -430,6 +477,10 @@ const handleSubmit = async () => {
       return;
     }
 
+    const isChampMatch = !!form.value.championshipId;
+    const hasHomePk = form.value.homePenalties !== '' && form.value.homePenalties !== null;
+    const hasAwayPk = form.value.awayPenalties !== '' && form.value.awayPenalties !== null;
+
     const payload = {
       championshipId: form.value.championshipId ? Number(form.value.championshipId) : null,
       homeTeamId: form.value.homeTeamId ? Number(form.value.homeTeamId) : null,
@@ -438,7 +489,12 @@ const handleSubmit = async () => {
       date: new Date(form.value.date).toISOString(),
       location: form.value.location,
       homeScore: hasHomeScore ? Number(form.value.homeScore) : null,
-      awayScore: hasAwayScore ? Number(form.value.awayScore) : null
+      awayScore: hasAwayScore ? Number(form.value.awayScore) : null,
+      // Campos de mata-mata/grupos só quando é partida de campeonato
+      homePenalties: isChampMatch && hasHomePk ? Number(form.value.homePenalties) : null,
+      awayPenalties: isChampMatch && hasAwayPk ? Number(form.value.awayPenalties) : null,
+      phase: isChampMatch ? (form.value.phase || null) : null,
+      groupName: isChampMatch ? (form.value.groupName || null) : null
     };
 
     const matchupLabel = `${homeTeamLabel.value} x ${awayTeamLabel.value}`;
@@ -462,9 +518,7 @@ const handleSubmit = async () => {
     await loadMatches();
   } catch (error: any) {
     console.error('Erro ao salvar partida:', error);
-    const apiErrorMsg = error.data?.message;
-    const errorMsg = Array.isArray(apiErrorMsg) ? apiErrorMsg[0] : apiErrorMsg;
-    showFeedback('error', errorMsg || 'Erro ao salvar partida. Verifique os dados inseridos.');
+    showFeedback('error', getErrorMessage(error, 'Erro ao salvar partida. Verifique os dados inseridos.'));
   } finally {
     submitting.value = false;
   }
@@ -536,42 +590,6 @@ onMounted(() => {
 }
 
 /* Alertas */
-.feedback-alert {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 3px solid var(--color-asphalt);
-  border-radius: var(--radius-sm);
-  box-shadow: 4px 4px 0px var(--color-asphalt);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  position: relative;
-}
-
-.feedback-alert--success {
-  background-color: var(--color-primary-container);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.feedback-alert--error {
-  background-color: #fdd8d8;
-  color: var(--color-error-red);
-  border-color: var(--color-error-red);
-}
-
-.feedback-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-left: auto;
-  color: inherit;
-}
-
 /* Formulário */
 .match-form-card {
   border: 4px solid var(--color-primary) !important;
@@ -650,7 +668,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 120px;
+  /* No mobile os dois campos dividem o espaço sem estourar o modal;
+     max-width evita ficarem largos demais no desktop. */
+  flex: 1;
+  min-width: 0;
+  max-width: 120px;
 }
 
 .score-label {
@@ -686,17 +708,6 @@ onMounted(() => {
 }
 
 /* Transições */
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.25s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
 /* Tabela de Partidas */
 .matches-list-card {
   padding: 0 !important;

@@ -5,15 +5,13 @@
         <h1>Gerenciar Notícias</h1>
         <p class="page-subtitle">Publique novidades, comunicados e artigos sobre o La Resenha FC.</p>
       </div>
-      <VButton @click="toggleForm" variant="primary" class="new-news-btn">
-        {{ showForm ? 'Fechar Formulário ✖' : 'Nova Notícia ✍️' }}
+      <VButton @click="openForm" variant="primary" class="new-news-btn">
+        Nova Notícia ✍️
       </VButton>
     </div>
 
     <!-- Formulário de Notícia -->
-    <transition name="slide-fade">
-      <VCard v-if="showForm" class="news-form-card" variant="featured">
-        <h2 class="form-title">{{ isEditing ? 'Editar Notícia' : 'Escrever Nova Notícia' }}</h2>
+    <VModal v-model="showForm" :title="isEditing ? 'Editar Notícia' : 'Escrever Nova Notícia'">
         <form @submit.prevent="handleSubmit" class="news-form">
           <div class="form-grid">
             <div class="form-group form-group--full">
@@ -90,8 +88,7 @@
             </VButton>
           </div>
         </form>
-      </VCard>
-    </transition>
+    </VModal>
 
     <!-- Lista de Notícias -->
     <div class="news-list-container">
@@ -116,7 +113,7 @@
           </div>
           <div class="news-content">
             <div class="news-meta">
-              <span class="news-date">📅 {{ formatDate(news.publishedAt || news.createdAt) }}</span>
+              <span class="news-date">📅 {{ formatDateTime(news.publishedAt || news.createdAt) }}</span>
               <span class="news-author">✍️ {{ news.author?.name || 'Admin' }}</span>
             </div>
             <h3 class="news-card-title">{{ news.title }}</h3>
@@ -141,9 +138,11 @@ import { ref, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import Editor from '@tinymce/tinymce-vue';
 import { useApi } from '~/composables/useApi';
-import { useToast } from '~/composables/useToast';
+import { useFeedback } from '~/composables/useFeedback';
+import { formatDateTime } from '~/utils/formatters';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import VModal from '~/components/ui/VModal.vue';
 import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
@@ -187,12 +186,7 @@ const form = ref({
   publishedAt: ''
 });
 
-const toast = useToast();
-
-const showFeedback = (type: 'success' | 'error', message: string) => {
-  if (type === 'success') toast.success(message);
-  else toast.error(message);
-};
+const { showFeedback, getErrorMessage } = useFeedback();
 
 const loadNews = async () => {
   loading.value = true;
@@ -213,11 +207,9 @@ const loadNews = async () => {
   }
 };
 
-const toggleForm = () => {
-  showForm.value = !showForm.value;
-  if (!showForm.value) {
-    resetForm();
-  }
+const openForm = () => {
+  resetForm();
+  showForm.value = true;
 };
 
 const resetForm = () => {
@@ -229,17 +221,6 @@ const resetForm = () => {
   };
   isEditing.value = false;
   editingId.value = null;
-};
-
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 };
 
 const getExcerpt = (text: string, length = 120) => {
@@ -308,9 +289,7 @@ const handleSubmit = async () => {
     await loadNews();
   } catch (error: any) {
     console.error('Erro ao salvar notícia:', error);
-    const apiErrorMsg = error.data?.message;
-    const errorMsg = Array.isArray(apiErrorMsg) ? apiErrorMsg[0] : apiErrorMsg;
-    showFeedback('error', errorMsg || 'Erro ao salvar notícia. Verifique os dados inseridos.');
+    showFeedback('error', getErrorMessage(error, 'Erro ao salvar notícia. Verifique os dados inseridos.'));
   } finally {
     submitting.value = false;
   }
@@ -380,42 +359,6 @@ onMounted(() => {
 }
 
 /* Alertas */
-.feedback-alert {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 3px solid var(--color-asphalt);
-  border-radius: var(--radius-sm);
-  box-shadow: 4px 4px 0px var(--color-asphalt);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  position: relative;
-}
-
-.feedback-alert--success {
-  background-color: var(--color-primary-container);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.feedback-alert--error {
-  background-color: #fdd8d8;
-  color: var(--color-error-red);
-  border-color: var(--color-error-red);
-}
-
-.feedback-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-left: auto;
-  color: inherit;
-}
-
 /* Formulário */
 .news-form-card {
   border: 4px solid var(--color-primary) !important;
@@ -514,17 +457,6 @@ onMounted(() => {
 }
 
 /* Transições */
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.25s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
 /* Lista de Notícias */
 .news-grid {
   display: grid;

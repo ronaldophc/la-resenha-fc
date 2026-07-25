@@ -11,6 +11,7 @@ describe('StandingsService', () => {
   const mockChampionship = {
     id: 1,
     name: 'Liga Amadora 2026',
+    format: 'PONTOS_CORRIDOS',
     pointsPerWin: 3,
     pointsPerDraw: 1,
     pointsPerLoss: 0,
@@ -108,6 +109,7 @@ describe('StandingsService', () => {
           championshipId: 1,
           teamId: 2,
           pointsAdjustment: 0,
+          groupName: null,
         },
         include: {
           championship: true,
@@ -165,6 +167,38 @@ describe('StandingsService', () => {
 
       const result = await service.findAll(1);
       expect(result).toEqual([]);
+    });
+
+    it('mata-mata não gera tabela (só chaveamento)', async () => {
+      mockPrismaService.championship.findMany.mockResolvedValue([
+        { ...mockChampionship, format: 'MATA_MATA' },
+      ]);
+      mockPrismaService.standing.findMany.mockResolvedValue([mockEnrollmentA, mockEnrollmentB]);
+      mockPrismaService.match.findMany.mockResolvedValue([]);
+
+      const result = await service.findAll(1);
+      expect(result).toEqual([]);
+    });
+
+    it('grupos + mata-mata: uma tabela por grupo, contando só os jogos do grupo', async () => {
+      mockPrismaService.championship.findMany.mockResolvedValue([
+        { ...mockChampionship, format: 'GRUPOS_MATA_MATA' },
+      ]);
+      mockPrismaService.standing.findMany.mockResolvedValue([
+        { ...mockEnrollmentA, groupName: 'A' },
+        { ...mockEnrollmentB, groupName: 'B' },
+      ]);
+      mockPrismaService.match.findMany.mockResolvedValue([
+        // jogo do grupo A não existe; knockout (sem groupName) não conta
+        { homeTeamId: 2, awayTeamId: 3, homeScore: 3, awayScore: 0, groupName: null },
+      ]);
+
+      const result = await service.findAll(1);
+      // duas linhas (um time em cada grupo), cada uma 1º do seu grupo, sem jogos contados
+      expect(result).toHaveLength(2);
+      const groups = result.map((r) => r.group).sort();
+      expect(groups).toEqual(['A', 'B']);
+      expect(result.every((r) => r.position === 1 && r.played === 0)).toBe(true);
     });
   });
 

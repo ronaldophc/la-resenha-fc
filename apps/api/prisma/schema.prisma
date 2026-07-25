@@ -41,6 +41,8 @@ model Championship {
   id            Int        @id @default(autoincrement())
   name          String     @unique
   logoUrl       String?    @map("logo_url")
+  // Formato do campeonato: "PONTOS_CORRIDOS" | "MATA_MATA" | "GRUPOS_MATA_MATA"
+  format        String     @default("PONTOS_CORRIDOS")
   // Configuração de pontuação
   pointsPerWin  Int        @default(3) @map("points_per_win")
   pointsPerDraw Int        @default(1) @map("points_per_draw")
@@ -48,12 +50,36 @@ model Championship {
   // Critérios de desempate, em ordem de aplicação.
   // Valores válidos: "wins" | "goalDiff" | "goalsFor" | "goalsAgainst" | "headToHead"
   tiebreakers   String[]   @default(["wins", "goalDiff", "goalsFor", "headToHead"])
+  // Mata-mata: 1 = jogo único, 2 = ida e volta
+  knockoutLegs  Int        @default(1) @map("knockout_legs")
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
   standings     Standing[]
   matches       Match[]
+  ties          Tie[]
 
   @@map("championships")
+}
+
+// Confronto do chaveamento (mata-mata). round 1 = fase inicial; cresce até a final.
+model Tie {
+  id             Int          @id @default(autoincrement())
+  championshipId Int          @map("championship_id")
+  championship   Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
+  round          Int          // 1 = fase inicial ... maior = final
+  slot           Int          // posição (0-based) dentro da rodada
+  homeTeamId     Int?         @map("home_team_id")
+  homeTeam       Team?        @relation("tieHome", fields: [homeTeamId], references: [id], onDelete: SetNull)
+  awayTeamId     Int?         @map("away_team_id")
+  awayTeam       Team?        @relation("tieAway", fields: [awayTeamId], references: [id], onDelete: SetNull)
+  // Vencedor calculado (agregado + pênaltis), usado para avançar o chaveamento
+  winnerTeamId   Int?         @map("winner_team_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  matches        Match[]
+
+  @@unique([championshipId, round, slot])
+  @@map("ties")
 }
 
 model Team {
@@ -67,6 +93,8 @@ model Team {
   standings   Standing[]
   homeMatches Match[]    @relation("homeMatches")
   awayMatches Match[]    @relation("awayMatches")
+  homeTies    Tie[]      @relation("tieHome")
+  awayTies    Tie[]      @relation("tieAway")
 
   @@map("teams")
 }
@@ -82,6 +110,16 @@ model Match {
   // placar preenchido entram no cálculo da classificação.
   homeScore      Int?          @map("home_score")
   awayScore      Int?          @map("away_score")
+  // Disputa de pênaltis (preenchido só quando houve)
+  homePenalties  Int?          @map("home_penalties")
+  awayPenalties  Int?          @map("away_penalties")
+  // Fase do mata-mata (derivada da rodada do confronto) e grupo (fase de grupos: "A", "B"...)
+  phase          String?
+  groupName      String?       @map("group_name")
+  // Vínculo com o confronto do chaveamento (mata-mata) e qual jogo (1=ida, 2=volta)
+  tieId          Int?          @map("tie_id")
+  tie            Tie?          @relation(fields: [tieId], references: [id], onDelete: Cascade)
+  leg            Int?
   homeTeamId     Int?          @map("home_team_id")
   homeTeam       Team?         @relation("homeMatches", fields: [homeTeamId], references: [id], onDelete: SetNull)
   awayTeamId     Int?          @map("away_team_id")
@@ -127,6 +165,23 @@ model SiteSettings {
   @@map("site_settings")
 }
 
+model Sponsor {
+  id             Int      @id @default(autoincrement())
+  name           String
+  logoUrl        String?  @map("logo_url")
+  description    String?  @db.Text
+  // Redes sociais / contato do patrocinador (aparecem como ícones no site)
+  instagramUrl   String?  @map("instagram_url")
+  // Somente dígitos, com DDI e DDD (ex: 5541999999999) — link wa.me montado no front
+  whatsappNumber String?  @map("whatsapp_number")
+  youtubeUrl     String?  @map("youtube_url")
+  facebookUrl    String?  @map("facebook_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("sponsors")
+}
+
 // Inscrição de um time em um campeonato. As estatísticas (pontos, jogos,
 // vitórias etc.) NÃO são armazenadas: são calculadas a partir das partidas.
 model Standing {
@@ -135,6 +190,8 @@ model Standing {
   championship     Championship @relation(fields: [championshipId], references: [id], onDelete: Cascade)
   teamId           Int          @map("team_id")
   team             Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  // Grupo do time no campeonato (só usado em GRUPOS_MATA_MATA): "A", "B"...
+  groupName        String?      @map("group_name")
   // Ajuste manual de pontos (punições, W.O. etc.) somado ao total calculado
   pointsAdjustment Int          @default(0) @map("points_adjustment")
   createdAt        DateTime     @default(now()) @map("created_at")

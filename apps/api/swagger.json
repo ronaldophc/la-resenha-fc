@@ -15,34 +15,6 @@
         ]
       }
     },
-    "/auth/register": {
-      "post": {
-        "operationId": "AuthController_register",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Usuário registrado com sucesso"
-          },
-          "400": {
-            "description": "Email já cadastrado"
-          }
-        },
-        "summary": "Registra um novo usuário",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
     "/auth/login": {
       "post": {
         "description": "Realiza a autenticação com e-mail e senha, retornando o token de acesso JWT.",
@@ -583,13 +555,53 @@
     "/matches": {
       "get": {
         "operationId": "MatchesController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "championshipId",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por campeonato",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "friendly",
+            "required": false,
+            "in": "query",
+            "description": "true = só amistosos (sem campeonato)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownClub",
+            "required": false,
+            "in": "query",
+            "description": "true = só partidas do clube da casa",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "upcoming",
+                "completed"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Lista de partidas retornada com sucesso"
           }
         },
-        "summary": "Retorna todas as partidas ordenadas por data decrescente",
+        "summary": "Lista partidas, filtradas no servidor pelos parâmetros informados",
         "tags": [
           "matches"
         ]
@@ -768,6 +780,105 @@
         "summary": "Remove uma partida por id (Apenas ADMIN)",
         "tags": [
           "matches"
+        ]
+      }
+    },
+    "/ties": {
+      "get": {
+        "operationId": "TiesController_getBracket",
+        "parameters": [
+          {
+            "name": "championshipId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chaveamento retornado com sucesso"
+          }
+        },
+        "summary": "Retorna o chaveamento (confrontos) de um campeonato",
+        "tags": [
+          "ties"
+        ]
+      }
+    },
+    "/ties/generate": {
+      "post": {
+        "operationId": "TiesController_generate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateBracketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Chaveamento gerado"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Gera (ou regenera) o chaveamento do mata-mata (Apenas ADMIN)",
+        "tags": [
+          "ties"
+        ]
+      }
+    },
+    "/ties/{id}": {
+      "patch": {
+        "operationId": "TiesController_updateTie",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTieDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Confronto atualizado"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Define times/placares de um confronto e recalcula o avanço (Apenas ADMIN)",
+        "tags": [
+          "ties"
         ]
       }
     },
@@ -1465,6 +1576,161 @@
           "uploads"
         ]
       }
+    },
+    "/sponsors": {
+      "get": {
+        "operationId": "SponsorsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de patrocinadores retornada com sucesso"
+          }
+        },
+        "summary": "Retorna todos os patrocinadores",
+        "tags": [
+          "sponsors"
+        ]
+      },
+      "post": {
+        "operationId": "SponsorsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSponsorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Patrocinador cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastra um novo patrocinador (Apenas ADMIN)",
+        "tags": [
+          "sponsors"
+        ]
+      }
+    },
+    "/sponsors/{id}": {
+      "get": {
+        "operationId": "SponsorsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patrocinador encontrado"
+          },
+          "404": {
+            "description": "Patrocinador não encontrado"
+          }
+        },
+        "summary": "Retorna um patrocinador específico por id",
+        "tags": [
+          "sponsors"
+        ]
+      },
+      "patch": {
+        "operationId": "SponsorsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSponsorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Patrocinador atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados de entrada inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Patrocinador não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Atualiza parcialmente um patrocinador (Apenas ADMIN)",
+        "tags": [
+          "sponsors"
+        ]
+      },
+      "delete": {
+        "operationId": "SponsorsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Patrocinador removido com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Patrocinador não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove um patrocinador por id (Apenas ADMIN)",
+        "tags": [
+          "sponsors"
+        ]
+      }
     }
   },
   "info": {
@@ -1484,31 +1750,6 @@
       }
     },
     "schemas": {
-      "RegisterDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "example": "joao@email.com",
-            "description": "Email do usuário a ser cadastrado"
-          },
-          "password": {
-            "type": "string",
-            "example": "123456",
-            "description": "Senha do usuário a ser cadastrado"
-          },
-          "role": {
-            "type": "string",
-            "example": "admin",
-            "description": "Papel (role) do usuário a ser cadastrado"
-          }
-        },
-        "required": [
-          "email",
-          "password",
-          "role"
-        ]
-      },
       "CreateUserDto": {
         "type": "object",
         "properties": {
@@ -1618,12 +1859,117 @@
             "type": "object",
             "description": "ID do campeonato associado (omitir para amistoso)",
             "example": 1
+          },
+          "homePenalties": {
+            "type": "object",
+            "description": "Pênaltis do mandante (preencher só quando houve disputa)",
+            "example": 4,
+            "minimum": 0,
+            "nullable": true
+          },
+          "awayPenalties": {
+            "type": "object",
+            "description": "Pênaltis do visitante (preencher só quando houve disputa)",
+            "example": 2,
+            "minimum": 0,
+            "nullable": true
+          },
+          "phase": {
+            "type": "object",
+            "description": "Fase do mata-mata (texto livre): \"Final\", \"Semifinal\", \"Oitavas\"...",
+            "example": "Semifinal",
+            "nullable": true
+          },
+          "groupName": {
+            "type": "object",
+            "description": "Grupo da fase de grupos (ex: \"A\"). Só em campeonatos com grupos.",
+            "example": "A",
+            "nullable": true
           }
         },
         "required": [
           "date",
           "location"
         ]
+      },
+      "GenerateBracketDto": {
+        "type": "object",
+        "properties": {
+          "championshipId": {
+            "type": "number",
+            "description": "ID do campeonato",
+            "example": 1
+          },
+          "teams": {
+            "type": "number",
+            "description": "Número de times na fase inicial (potência de 2)",
+            "enum": [
+              2,
+              4,
+              8,
+              16,
+              32
+            ],
+            "example": 8
+          }
+        },
+        "required": [
+          "championshipId",
+          "teams"
+        ]
+      },
+      "TieLegDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "object",
+            "description": "Data e hora do jogo (ISO 8601)",
+            "nullable": true
+          },
+          "location": {
+            "type": "object",
+            "description": "Local do jogo",
+            "nullable": true
+          },
+          "homeScore": {
+            "type": "object",
+            "nullable": true
+          },
+          "awayScore": {
+            "type": "object",
+            "nullable": true
+          },
+          "homePenalties": {
+            "type": "object",
+            "nullable": true
+          },
+          "awayPenalties": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateTieDto": {
+        "type": "object",
+        "properties": {
+          "homeTeamId": {
+            "type": "object",
+            "description": "Time mandante (só na fase inicial)",
+            "nullable": true
+          },
+          "awayTeamId": {
+            "type": "object",
+            "description": "Time visitante (só na fase inicial)",
+            "nullable": true
+          },
+          "legs": {
+            "description": "Placares dos jogos do confronto (1 ou 2, conforme o campeonato)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TieLegDto"
+            }
+          }
+        }
       },
       "CreateNewsDto": {
         "type": "object",
@@ -1674,6 +2020,12 @@
             "description": "Ajuste manual de pontos (punições/W.O.), somado ao total calculado. Pode ser negativo.",
             "example": -3,
             "default": 0
+          },
+          "groupName": {
+            "type": "object",
+            "description": "Grupo do time no campeonato (só em GRUPOS_MATA_MATA), ex: \"A\".",
+            "example": "A",
+            "nullable": true
           }
         },
         "required": [
@@ -1699,6 +2051,12 @@
             "description": "Ajuste manual de pontos (punições/W.O.), somado ao total calculado. Pode ser negativo.",
             "example": -3,
             "default": 0
+          },
+          "groupName": {
+            "type": "object",
+            "description": "Grupo do time no campeonato (só em GRUPOS_MATA_MATA), ex: \"A\".",
+            "example": "A",
+            "nullable": true
           }
         }
       },
@@ -1747,6 +2105,25 @@
             "type": "string",
             "description": "URL do logo do campeonato",
             "example": "https://exemplo.com/logo-champ.png"
+          },
+          "format": {
+            "type": "string",
+            "description": "Formato do campeonato",
+            "enum": [
+              "PONTOS_CORRIDOS",
+              "MATA_MATA",
+              "GRUPOS_MATA_MATA"
+            ],
+            "default": "PONTOS_CORRIDOS"
+          },
+          "knockoutLegs": {
+            "type": "number",
+            "description": "Mata-mata: 1 = jogo único, 2 = ida e volta",
+            "enum": [
+              1,
+              2
+            ],
+            "default": 1
           },
           "pointsPerWin": {
             "type": "number",
@@ -1803,6 +2180,25 @@
             "type": "string",
             "description": "URL do logo do campeonato",
             "example": "https://exemplo.com/logo-champ.png"
+          },
+          "format": {
+            "type": "string",
+            "description": "Formato do campeonato",
+            "enum": [
+              "PONTOS_CORRIDOS",
+              "MATA_MATA",
+              "GRUPOS_MATA_MATA"
+            ],
+            "default": "PONTOS_CORRIDOS"
+          },
+          "knockoutLegs": {
+            "type": "number",
+            "description": "Mata-mata: 1 = jogo único, 2 = ida e volta",
+            "enum": [
+              1,
+              2
+            ],
+            "default": 1
           },
           "pointsPerWin": {
             "type": "number",
@@ -1890,6 +2286,93 @@
           "facebookUrl": {
             "type": "object",
             "description": "Link do Facebook",
+            "nullable": true
+          }
+        }
+      },
+      "CreateSponsorDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do patrocinador",
+            "example": "Padaria do Bairro"
+          },
+          "logoUrl": {
+            "type": "object",
+            "description": "URL do logo do patrocinador",
+            "example": "https://exemplo.com/logo-patrocinador.png",
+            "nullable": true
+          },
+          "description": {
+            "type": "object",
+            "description": "Descrição do patrocinador",
+            "example": "Apoiador oficial do time desde 2024.",
+            "nullable": true
+          },
+          "instagramUrl": {
+            "type": "object",
+            "description": "Link do Instagram do patrocinador",
+            "nullable": true
+          },
+          "whatsappNumber": {
+            "type": "object",
+            "description": "WhatsApp do patrocinador — só dígitos, com DDI e DDD (ex: 5541999999999)",
+            "nullable": true
+          },
+          "youtubeUrl": {
+            "type": "object",
+            "description": "Link do YouTube do patrocinador",
+            "nullable": true
+          },
+          "facebookUrl": {
+            "type": "object",
+            "description": "Link do Facebook do patrocinador",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateSponsorDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nome do patrocinador",
+            "example": "Padaria do Bairro"
+          },
+          "logoUrl": {
+            "type": "object",
+            "description": "URL do logo do patrocinador",
+            "example": "https://exemplo.com/logo-patrocinador.png",
+            "nullable": true
+          },
+          "description": {
+            "type": "object",
+            "description": "Descrição do patrocinador",
+            "example": "Apoiador oficial do time desde 2024.",
+            "nullable": true
+          },
+          "instagramUrl": {
+            "type": "object",
+            "description": "Link do Instagram do patrocinador",
+            "nullable": true
+          },
+          "whatsappNumber": {
+            "type": "object",
+            "description": "WhatsApp do patrocinador — só dígitos, com DDI e DDD (ex: 5541999999999)",
+            "nullable": true
+          },
+          "youtubeUrl": {
+            "type": "object",
+            "description": "Link do YouTube do patrocinador",
+            "nullable": true
+          },
+          "facebookUrl": {
+            "type": "object",
+            "description": "Link do Facebook do patrocinador",
             "nullable": true
           }
         }

@@ -33,21 +33,21 @@
   --color-on-surface: #e5e2e1;
   --color-on-surface-variant: #c9c0bb;
   --color-on-background: #e5e2e1;
-  --color-outline-variant: #4a3e3e;
+  --color-outline-variant: #5a3d42;
 
-  /* Paleta do escudo: vermelho tijolo do círculo + estrelas vermelha e âmbar */
-  --color-primary: #e57373;            /* vermelho claro (texto/acentos sobre fundo escuro) */
-  --color-on-primary: #3f0a0a;
-  --color-primary-container: #4a1215;  /* vinho escuro do escudo */
-  --color-on-primary-container: #d98a8a;
+  /* Paleta do escudo do C.A Independente: vinho/bordô + branco + estrela dourada + estrela vermelha */
+  --color-primary: #e5605f;            /* vermelho de destaque (texto/acentos/botões sobre fundo escuro) */
+  --color-on-primary: #ffffff;
+  --color-primary-container: #6e1f2e;  /* vinho do escudo (marca/cards/badges) */
+  --color-on-primary-container: #f3cdcd;
 
-  --color-secondary: #ef5350;          /* vermelho vivo (estrela) */
-  --color-on-secondary: #3b0505;
-  --color-secondary-container: #8e262c;
+  --color-secondary: #d64550;          /* vermelho do escudo (estrela/realces) */
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #6e1f2e;
 
-  --color-tertiary: #ffa726;           /* âmbar/laranja (estrela) */
-  --color-on-tertiary: #3a2500;
-  --color-tertiary-container: #c77f00;
+  --color-tertiary: #e7b23c;           /* dourado da estrela (detalhes/realces pontuais) */
+  --color-on-tertiary: #2a1c00;
+  --color-tertiary-container: #a87d18;
 
   /* Verde reservado APENAS para semântica de vitória/sucesso */
   --color-vibrant-turf: #4ade80;
@@ -55,6 +55,8 @@
   
   --color-error: #ffb4ab;
   --color-on-error: #690005;
+  /* Vermelho de erro legível sobre fundos claros (toasts, alertas, textos) */
+  --color-error-red: #c62828;
   
   /* Spacing */
   --space-base: 8px;
@@ -88,6 +90,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Defesa contra overflow horizontal no mobile: nenhuma mídia estoura o container.
+   Seletores de classe com dimensões fixas (ex.: logos) continuam prevalecendo. */
+img, svg, video, canvas, iframe {
+  max-width: 100%;
 }
 
 body {

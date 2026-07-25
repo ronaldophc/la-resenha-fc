@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
@@ -17,18 +18,32 @@ import { CreateMatchDto } from './dto/create-match.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('matches')
 @Controller('matches')
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
 
-  @ApiOperation({ summary: 'Retorna todas as partidas ordenadas por data decrescente' })
+  @ApiOperation({ summary: 'Lista partidas, filtradas no servidor pelos parâmetros informados' })
+  @ApiQuery({ name: 'championshipId', required: false, description: 'Filtra por campeonato' })
+  @ApiQuery({ name: 'friendly', required: false, description: 'true = só amistosos (sem campeonato)' })
+  @ApiQuery({ name: 'ownClub', required: false, description: 'true = só partidas do clube da casa' })
+  @ApiQuery({ name: 'status', required: false, enum: ['upcoming', 'completed'] })
   @ApiResponse({ status: 200, description: 'Lista de partidas retornada com sucesso' })
   @Get()
-  async findAll() {
-    return this.matchesService.findAll();
+  async findAll(
+    @Query('championshipId', new ParseIntPipe({ optional: true })) championshipId?: number,
+    @Query('friendly') friendly?: string,
+    @Query('ownClub') ownClub?: string,
+    @Query('status') status?: 'upcoming' | 'completed',
+  ) {
+    return this.matchesService.findAll({
+      championshipId,
+      friendly: friendly === 'true',
+      ownClub: ownClub === 'true',
+      status: status === 'upcoming' || status === 'completed' ? status : undefined,
+    });
   }
 
   @ApiOperation({ summary: 'Retorna os detalhes de uma partida específica por id' })

@@ -5,15 +5,13 @@
         <h1>Gerenciar Campeonatos</h1>
         <p class="page-subtitle">Cadastre e gerencie os campeonatos e acesse para gerenciar suas tabelas.</p>
       </div>
-      <VButton @click="toggleForm" variant="primary" class="new-champ-btn">
-        {{ showForm ? 'Fechar Formulário ✖' : 'Novo Campeonato 🏆' }}
+      <VButton @click="openForm" variant="primary" class="new-champ-btn">
+        Novo Campeonato 🏆
       </VButton>
     </div>
 
     <!-- Formulário de Cadastro / Edição -->
-    <transition name="slide-fade">
-      <VCard v-if="showForm" class="champ-form-card" variant="featured">
-        <h2 class="form-title">{{ isEditing ? 'Editar Campeonato' : 'Criar Novo Campeonato' }}</h2>
+    <VModal v-model="showForm" :title="isEditing ? 'Editar Campeonato' : 'Criar Novo Campeonato'">
         <form @submit.prevent="handleSubmit" class="champ-form">
           <div class="form-grid">
             <div class="form-group">
@@ -31,6 +29,24 @@
             <div class="form-group">
               <label>Logo do Campeonato (Opcional)</label>
               <ImageUpload v-model="form.logoUrl" label="Logo do campeonato" />
+            </div>
+
+            <div class="form-group">
+              <label for="format">Formato *</label>
+              <select v-model="form.format" id="format" required class="form-input">
+                <option value="PONTOS_CORRIDOS">Pontos corridos</option>
+                <option value="MATA_MATA">Mata-mata</option>
+                <option value="GRUPOS_MATA_MATA">Fase de grupos + mata-mata</option>
+              </select>
+              <p class="form-hint">Define como o campeonato aparece no site (tabela e/ou chaveamento).</p>
+            </div>
+
+            <div class="form-group" v-if="form.format === 'MATA_MATA' || form.format === 'GRUPOS_MATA_MATA'">
+              <label for="knockoutLegs">Mata-mata: jogos por confronto</label>
+              <select v-model.number="form.knockoutLegs" id="knockoutLegs" class="form-input">
+                <option :value="1">Jogo único</option>
+                <option :value="2">Ida e volta</option>
+              </select>
             </div>
           </div>
 
@@ -107,8 +123,7 @@
             </VButton>
           </div>
         </form>
-      </VCard>
-    </transition>
+    </VModal>
 
     <!-- Lista de Campeonatos -->
     <div v-if="loading" class="loading-state">
@@ -126,10 +141,10 @@
         <div class="champ-card-header">
           <div class="champ-logo-wrapper">
             <img 
-              :src="champ.logoUrl || 'https://images.unsplash.com/photo-1518063319789-7217e6706b04?q=80&w=100&auto=format&fit=crop'" 
+              :src="champ.logoUrl || PLACEHOLDER_CHAMP"
               :alt="champ.name"
               class="champ-logo"
-              @error="setDefaultLogo"
+              @error="onImageError($event, PLACEHOLDER_CHAMP)"
             />
           </div>
           <h3 class="champ-title">{{ champ.name }}</h3>
@@ -157,9 +172,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { useHead, definePageMeta, navigateTo } from '#imports';
 import { useApi } from '~/composables/useApi';
-import { useToast } from '~/composables/useToast';
+import { useFeedback } from '~/composables/useFeedback';
+import { onImageError, PLACEHOLDER_CHAMP } from '~/utils/placeholders';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import VModal from '~/components/ui/VModal.vue';
 import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
@@ -175,8 +192,10 @@ interface Championship {
   id: number;
   name: string;
   logoUrl?: string;
+  format?: string;
   pointsPerWin?: number;
   pointsPerDraw?: number;
+  knockoutLegs?: number;
   pointsPerLoss?: number;
   tiebreakers?: string[];
 }
@@ -205,6 +224,8 @@ const tiebreakerToAdd = ref('');
 const form = ref({
   name: '',
   logoUrl: '',
+  format: 'PONTOS_CORRIDOS',
+  knockoutLegs: 1,
   pointsPerWin: 3,
   pointsPerDraw: 1,
   pointsPerLoss: 0,
@@ -234,12 +255,7 @@ const addTiebreaker = () => {
   tiebreakerToAdd.value = '';
 };
 
-const toast = useToast();
-
-const showFeedback = (type: 'success' | 'error', message: string) => {
-  if (type === 'success') toast.success(message);
-  else toast.error(message);
-};
+const { showFeedback, getErrorMessage } = useFeedback();
 
 const loadChampionships = async () => {
   loading.value = true;
@@ -254,17 +270,17 @@ const loadChampionships = async () => {
   }
 };
 
-const toggleForm = () => {
-  showForm.value = !showForm.value;
-  if (!showForm.value) {
-    resetForm();
-  }
+const openForm = () => {
+  resetForm();
+  showForm.value = true;
 };
 
 const resetForm = () => {
   form.value = {
     name: '',
     logoUrl: '',
+    format: 'PONTOS_CORRIDOS',
+    knockoutLegs: 1,
     pointsPerWin: 3,
     pointsPerDraw: 1,
     pointsPerLoss: 0,
@@ -279,6 +295,8 @@ const startEdit = (champ: Championship) => {
   form.value = {
     name: champ.name,
     logoUrl: champ.logoUrl || '',
+    format: champ.format || 'PONTOS_CORRIDOS',
+    knockoutLegs: champ.knockoutLegs ?? 1,
     pointsPerWin: champ.pointsPerWin ?? 3,
     pointsPerDraw: champ.pointsPerDraw ?? 1,
     pointsPerLoss: champ.pointsPerLoss ?? 0,
@@ -302,6 +320,8 @@ const handleSubmit = async () => {
     const payload = {
       name: form.value.name,
       logoUrl: form.value.logoUrl || null,
+      format: form.value.format,
+      knockoutLegs: form.value.knockoutLegs,
       pointsPerWin: form.value.pointsPerWin,
       pointsPerDraw: form.value.pointsPerDraw,
       pointsPerLoss: form.value.pointsPerLoss,
@@ -327,9 +347,7 @@ const handleSubmit = async () => {
     await loadChampionships();
   } catch (error: any) {
     console.error('Erro ao salvar campeonato:', error);
-    const apiErrorMsg = error.data?.message;
-    const errorMsg = Array.isArray(apiErrorMsg) ? apiErrorMsg[0] : apiErrorMsg;
-    showFeedback('error', errorMsg || 'Erro ao salvar o campeonato. Verifique se o nome já existe.');
+    showFeedback('error', getErrorMessage(error, 'Erro ao salvar o campeonato. Verifique se o nome já existe.'));
   } finally {
     submitting.value = false;
   }
@@ -350,9 +368,6 @@ const confirmDelete = async (champ: Championship) => {
   }
 };
 
-const setDefaultLogo = (event: any) => {
-  event.target.src = 'https://images.unsplash.com/photo-1518063319789-7217e6706b04?q=80&w=100&auto=format&fit=crop';
-};
 
 const goToChampionship = (id: number) => {
   navigateTo(`/admin/campeonatos/${id}`);
@@ -404,42 +419,6 @@ onMounted(() => {
 .new-champ-btn {
   font-size: 1.1rem;
   font-weight: 700;
-}
-
-.feedback-alert {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 3px solid var(--color-asphalt);
-  border-radius: var(--radius-sm);
-  box-shadow: 4px 4px 0px var(--color-asphalt);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  position: relative;
-}
-
-.feedback-alert--success {
-  background-color: var(--color-primary-container);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.feedback-alert--error {
-  background-color: #fdd8d8;
-  color: var(--color-error-red);
-  border-color: var(--color-error-red);
-}
-
-.feedback-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-left: auto;
-  color: inherit;
 }
 
 .champ-form-card {
@@ -580,13 +559,15 @@ onMounted(() => {
   color: var(--color-goal-white);
   border: 2px solid var(--color-outline-variant);
   border-radius: var(--radius-sm);
-  width: 30px;
-  height: 30px;
+  /* Alvo de toque maior no mobile */
+  width: 40px;
+  height: 40px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .tiebreaker-btn:hover:not(:disabled) {
@@ -612,17 +593,6 @@ onMounted(() => {
 
 .tiebreaker-select {
   max-width: 280px;
-}
-
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.25s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
 }
 
 .loading-state,

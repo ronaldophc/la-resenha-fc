@@ -14,6 +14,8 @@ import { TeamsModule } from './teams/teams.module';
 import { ChampionshipsModule } from './championships/championships.module';
 import { SettingsModule } from './settings/settings.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { SponsorsModule } from './sponsors/sponsors.module';
+import { TiesModule } from './ties/ties.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { UploadsModule } from './uploads/uploads.module';
     ChampionshipsModule,
     SettingsModule,
     UploadsModule,
+    SponsorsModule,
+    TiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

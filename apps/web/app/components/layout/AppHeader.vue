@@ -11,6 +11,7 @@
         <NuxtLink to="/" class="nav-item" active-class="nav-active">Home</NuxtLink>
         <NuxtLink to="/elenco" class="nav-item" active-class="nav-active">Elenco</NuxtLink>
         <NuxtLink to="/resultados" class="nav-item" active-class="nav-active">Campeonatos</NuxtLink>
+        <NuxtLink to="/patrocinadores" class="nav-item" active-class="nav-active">Patrocinadores</NuxtLink>
       </nav>
     </div>
 
@@ -26,6 +27,7 @@
       <NuxtLink to="/" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Home</NuxtLink>
       <NuxtLink to="/elenco" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Elenco</NuxtLink>
       <NuxtLink to="/resultados" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Campeonatos</NuxtLink>
+      <NuxtLink to="/patrocinadores" class="mobile-nav-item" active-class="mobile-nav-active" @click="closeMobileMenu">Patrocinadores</NuxtLink>
       <template v-if="isAuthenticated">
         <button class="mobile-nav-item logout-btn" @click="handleLogout">Sair da Conta</button>
       </template>

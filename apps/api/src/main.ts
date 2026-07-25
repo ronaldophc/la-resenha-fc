@@ -28,17 +28,19 @@ async function bootstrap() {
     }),
   );
 
-  // Configuração do Swagger
-  const config = new DocumentBuilder()
-    .setTitle('API com Swagger')
-    .setDescription('Documentação automática da API com Swagger')
-    .setVersion('1.0')
-    .addBearerAuth() // Para habilitar autenticação JWT
-    .build();
+  // Swagger apenas fora de produção — não expor a superfície da API no ar.
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('API com Swagger')
+      .setDescription('Documentação automática da API com Swagger')
+      .setVersion('1.0')
+      .addBearerAuth() // Para habilitar autenticação JWT
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-  writeFileSync('./swagger.json', JSON.stringify(document, null, 2));
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+    writeFileSync('./swagger.json', JSON.stringify(document, null, 2));
+  }
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') ?? 3000;
