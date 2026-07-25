@@ -15,9 +15,8 @@ export const useAuth = () => {
   // Estado reativo compartilhado do usuário (SSR-safe)
   const user = useState<User | null>('auth_user', () => null);
   
-  // Cookie seguro contendo o token JWT
+  // Cookie contendo o token JWT (leitura). A persistência é definida na escrita (login).
   const token = useCookie<string | null>('auth_token', {
-    maxAge: 60 * 60 * 8, // 8 horas (duração igual à do backend JWT_EXPIRATION)
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
@@ -27,16 +26,28 @@ export const useAuth = () => {
 
   /**
    * Realiza login no backend, armazena o token e busca as informações do usuário.
+   * Com rememberMe, o cookie fica persistente (~30 dias); sem, é cookie de sessão
+   * (o navegador o apaga ao fechar).
    */
-  const login = async (credentials: { email: string; password?: string }) => {
+  const login = async (credentials: { email: string; password?: string; rememberMe?: boolean }) => {
     try {
+      const rememberMe = !!credentials.rememberMe;
       const response = await request<{ data: { accessToken?: string; token?: string; user: User } }>('/auth/login', {
         method: 'POST',
-        body: credentials,
+        body: { email: credentials.email, password: credentials.password, rememberMe },
       });
 
       if (response && response.data) {
-        token.value = response.data.accessToken || response.data.token || null;
+        const jwt = response.data.accessToken || response.data.token || null;
+        // ÚNICA escrita do cookie, já com a persistência escolhida:
+        // rememberMe -> persistente (~30 dias); senão -> cookie de sessão (sem maxAge)
+        const authCookie = useCookie<string | null>('auth_token', {
+          maxAge: rememberMe ? 60 * 60 * 24 * 30 : undefined,
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+          path: '/',
+        });
+        authCookie.value = jwt;
         user.value = response.data.user;
         await navigateTo('/admin');
         return { success: true };

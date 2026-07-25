@@ -9,18 +9,20 @@ tasks:
     usage: Derruba os containers
     run: docker compose down
 
+  start:
+    usage: Sobe os containers e inicia os servidores
+    run: docker compose start
+
   api:
     usage: Inicia a API NestJS (porta 3001)
     description: Garante os containers de pé e roda o Nest em modo watch.
     run:
-      - task: up
       - command: docker compose exec api npm run dev:api
 
   web:
     usage: Inicia o front Nuxt (porta 3000)
     description: Garante os containers de pé e roda o Nuxt em modo dev.
     run:
-      - task: up
       - command: docker compose exec web npm run dev:web
 
   shell-api:

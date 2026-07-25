@@ -5,20 +5,30 @@
       <h1 class="page-title">Calendário & Classificação</h1>
       <p class="page-subtitle">Acompanhe as batalhas na quadra e a nossa jornada rumo ao topo da liga.</p>
 
-      <!-- Filtro Único de Competição (controla confrontos e classificação) -->
+      <!-- Filtro Único de Competição (controla confrontos e classificação).
+           Ao trocar, os dados do campeonato são buscados sob demanda no servidor. -->
       <div class="select-wrapper page-header__filter">
-        <select v-model="selectedChampionship" class="championship-select">
-          <option v-for="champ in championshipsList" :key="champ" :value="champ">
-            {{ champ }}
+        <select v-model="selectedKey" class="championship-select" :disabled="championships.length === 0 && !hasFriendlies">
+          <option v-for="champ in championships" :key="champ.id" :value="String(champ.id)">
+            {{ champ.name }}
           </option>
-          <option v-if="hasFriendlies" value="friendly">Amistosos</option>
+          <option value="friendly">Amistosos</option>
         </select>
       </div>
     </div>
 
+    <!-- Chaveamento (mata-mata) — só leitura -->
+    <section v-if="isKnockout && bracket.ties.length" class="bracket-section">
+      <h2 class="column-title">
+        <span class="material-symbols-outlined">account_tree</span>
+        Chaveamento
+      </h2>
+      <BracketBoard :bracket="bracket" />
+    </section>
+
     <!-- Grid de Conteúdo Central -->
     <div class="results-layout">
-      
+
       <!-- COLUNA DA ESQUERDA: PARTIDAS (8 colunas no desktop) -->
       <section class="matches-column">
         <div class="column-header">
@@ -54,9 +64,9 @@
         </div>
 
         <!-- Lista de Partidas -->
-        <div v-if="filteredMatches.length > 0" class="matches-list">
+        <div v-if="matches.length > 0" class="matches-list">
           <div
-            v-for="match in filteredMatches"
+            v-for="match in matches"
             :key="match.id"
             class="match-card"
             :class="{
@@ -70,6 +80,7 @@
             <div class="match-card__header">
               <span class="match-card__championship">
                 {{ match.championship || 'Amistoso Especial' }}
+                <span v-if="match.phase" class="match-card__phase">· {{ match.phase }}</span>
               </span>
               <span class="match-card__date">
                 {{ formatMatchDate(match.date) }}
@@ -95,6 +106,9 @@
                     <span class="match-card__score-divider">-</span>
                     <span class="match-card__score-num">{{ match.awayScore }}</span>
                   </div>
+                  <span v-if="match.homePenalties !== null && match.awayPenalties !== null" class="match-card__penalties">
+                    Pênaltis {{ match.homePenalties }} - {{ match.awayPenalties }}
+                  </span>
                   <span class="match-card__result-badge">
                     {{ getResultLabel(match.result) }}
                   </span>
@@ -141,58 +155,62 @@
           </h2>
         </div>
 
-        <!-- Tabela Neobrutalista -->
-        <div v-if="filteredStandings.length > 0" class="table-container">
-          <table class="standings-table">
-            <thead>
-              <tr>
-                <th class="text-center">Pos</th>
-                <th>Time</th>
-                <th class="text-center" title="Pontos">PTS</th>
-                <th class="text-center" title="Jogos">J</th>
-                <th class="text-center" title="Vitórias">V</th>
-                <th class="text-center" title="Empates">E</th>
-                <th class="text-center" title="Derrotas">D</th>
-                <th class="text-center" title="Saldo de Gols">SG</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr 
-                v-for="row in filteredStandings" 
-                :key="row.id"
-                :class="{ 'row-highlight': row.teamName === 'La Resenha' }"
-              >
-                <!-- Posição com indicador de cor neobrutalista -->
-                <td class="text-center font-bold">
-                  <div class="pos-badge" :class="getPosClass(row.position)">
-                    {{ row.position }}
-                  </div>
-                </td>
-                <td class="team-cell">
-                  <img v-if="row.logoUrl" :src="row.logoUrl" :alt="row.teamName" class="team-cell__logo-img" />
-                  <span v-else class="material-symbols-outlined team-cell__icon">
-                    {{ row.teamName === 'La Resenha' ? 'shield' : 'sports_soccer' }}
-                  </span>
-                  <span class="team-cell__name">{{ row.teamName }}</span>
-                </td>
-                <td class="text-center font-bold">{{ row.points }}</td>
-                <td class="text-center">{{ row.played }}</td>
-                <td class="text-center">{{ row.won }}</td>
-                <td class="text-center">{{ row.drawn }}</td>
-                <td class="text-center">{{ row.lost }}</td>
-                <td class="text-center font-semibold" :class="getGoalDiffClass(row.goalsFor - row.goalsAgainst)">
-                  {{ (row.goalsFor - row.goalsAgainst) > 0 ? '+' : '' }}{{ row.goalsFor - row.goalsAgainst }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Tabela(s) Neobrutalista(s) — uma por grupo quando houver grupos -->
+        <div v-if="standings.length > 0" class="standings-groups">
+          <div v-for="g in standingsGroups" :key="g.group || 'unico'" class="standings-group">
+            <h3 v-if="g.group" class="standings-group__title">Grupo {{ g.group }}</h3>
+            <div class="table-container">
+              <table class="standings-table">
+                <thead>
+                  <tr>
+                    <th class="text-center">Pos</th>
+                    <th>Time</th>
+                    <th class="text-center" title="Pontos">PTS</th>
+                    <th class="text-center" title="Jogos">J</th>
+                    <th class="text-center" title="Vitórias">V</th>
+                    <th class="text-center" title="Empates">E</th>
+                    <th class="text-center" title="Derrotas">D</th>
+                    <th class="text-center" title="Saldo de Gols">SG</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="row in g.rows"
+                    :key="row.id"
+                    :class="{ 'row-highlight': row.teamName === 'La Resenha' }"
+                  >
+                    <td class="text-center font-bold">
+                      <div class="pos-badge" :class="getPosClass(row.position)">
+                        {{ row.position }}
+                      </div>
+                    </td>
+                    <td class="team-cell">
+                      <img v-if="row.logoUrl" :src="row.logoUrl" :alt="row.teamName" class="team-cell__logo-img" />
+                      <span v-else class="material-symbols-outlined team-cell__icon">
+                        {{ row.teamName === 'La Resenha' ? 'shield' : 'sports_soccer' }}
+                      </span>
+                      <span class="team-cell__name">{{ row.teamName }}</span>
+                    </td>
+                    <td class="text-center font-bold">{{ row.points }}</td>
+                    <td class="text-center">{{ row.played }}</td>
+                    <td class="text-center">{{ row.won }}</td>
+                    <td class="text-center">{{ row.drawn }}</td>
+                    <td class="text-center">{{ row.lost }}</td>
+                    <td class="text-center font-semibold" :class="getGoalDiffClass(row.goalsFor - row.goalsAgainst)">
+                      {{ (row.goalsFor - row.goalsAgainst) > 0 ? '+' : '' }}{{ row.goalsFor - row.goalsAgainst }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- Estado Vazamento da Tabela -->
         <div v-else class="empty-state">
           <span class="material-symbols-outlined empty-state__icon">leaderboard</span>
           <p class="empty-state__text">
-            {{ selectedChampionship === 'friendly' ? 'Amistosos não possuem classificação.' : 'Nenhuma classificação disponível.' }}
+            {{ isFriendly ? 'Amistosos não possuem classificação.' : 'Nenhuma classificação disponível.' }}
           </p>
         </div>
 
@@ -203,8 +221,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useHead, useApi } from '#imports';
+import BracketBoard from '~/components/ui/BracketBoard.vue';
 
 // --- TITLES & SEO ---
 useHead({
@@ -223,6 +242,9 @@ interface Match {
   awayName: string;
   homeScore: number | null;
   awayScore: number | null;
+  homePenalties: number | null;
+  awayPenalties: number | null;
+  phase: string | null;
   championship: string | null;
   opponentLogo?: string | null;
   homeLogo?: string | null;
@@ -234,6 +256,7 @@ interface Match {
 interface Standing {
   id: number;
   championship: string;
+  group: string | null;
   position: number;
   teamName: string;
   logoUrl?: string | null;
@@ -248,13 +271,25 @@ interface Standing {
 
 // --- STATE & FILTER CONSTANTS ---
 const selectedFilter = ref<'all' | 'completed' | 'upcoming'>('all');
-const selectedChampionship = ref<string>('');
+// Chave do filtro: id do campeonato (string) ou 'friendly' (amistosos)
+const selectedKey = ref<string>('');
 
-// Competições conhecidas (união de partidas + classificação), mais recente primeiro
-const championships = ref<{ name: string; createdAt: string }[]>([]);
+const championships = ref<{ id: number; name: string; createdAt: string; format: string }[]>([]);
+// Sempre oferecemos a opção "Amistosos" no seletor
+const hasFriendlies = true;
 
 const matches = ref<Match[]>([]);
 const standings = ref<Standing[]>([]);
+const bracket = ref<{ maxRound: number; ties: any[] }>({ maxRound: 0, ties: [] });
+
+const selectedFormat = computed(
+  () => championships.value.find((c) => String(c.id) === selectedKey.value)?.format || null,
+);
+const isKnockout = computed(
+  () => selectedFormat.value === 'MATA_MATA' || selectedFormat.value === 'GRUPOS_MATA_MATA',
+);
+
+const isFriendly = computed(() => selectedKey.value === 'friendly');
 
 const { request } = useApi();
 
@@ -290,180 +325,157 @@ const getGoalDiffClass = (diff: number) => {
   return 'text-white-muted';
 };
 
-// --- COMPUTED FILTERED ARRAYS ---
-const hasFriendlies = computed(() => matches.value.some(m => !m.championship));
+// --- MAPEADORES (API -> view) ---
+const mapMatch = (m: any): Match => {
+  const homeName: string = m.homeTeam?.name || 'La Resenha';
+  const awayName: string = m.awayTeam?.name || m.opponent || 'Adversário';
+  const scheduled = m.homeScore === null || m.homeScore === undefined;
 
-const filteredMatches = computed(() => {
-  let list = [...matches.value];
-
-  // Filtro por competição (amistosos = partidas sem campeonato)
-  if (selectedChampionship.value === 'friendly') {
-    list = list.filter(m => !m.championship);
-  } else if (selectedChampionship.value) {
-    list = list.filter(m => m.championship === selectedChampionship.value);
+  // Resultado na perspectiva do La Resenha (independe de mando de campo)
+  let result: 'won' | 'lost' | 'drawn' | null = null;
+  if (!scheduled) {
+    const weAreHome = m.awayTeam?.isOwnClub ? false : true;
+    const ourScore = weAreHome ? m.homeScore : m.awayScore;
+    const theirScore = weAreHome ? m.awayScore : m.homeScore;
+    result = ourScore > theirScore ? 'won' : ourScore < theirScore ? 'lost' : 'drawn';
   }
 
-  // Ordenar decrescente por data para jogos anteriores e crescente para jogos futuros
-  list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return {
+    id: m.id,
+    date: m.date,
+    location: m.location,
+    homeName,
+    awayName,
+    homeScore: m.homeScore ?? null,
+    awayScore: m.awayScore ?? null,
+    homePenalties: m.homePenalties ?? null,
+    awayPenalties: m.awayPenalties ?? null,
+    phase: m.phase || null,
+    championship: m.championship?.name || m.championship || null,
+    homeLogo: m.homeTeam?.logoUrl || null,
+    opponentLogo: m.awayTeam?.logoUrl || null,
+    scheduled,
+    result,
+  };
+};
 
-  if (selectedFilter.value === 'completed') {
-    return list.filter(m => !m.scheduled);
-  } else if (selectedFilter.value === 'upcoming') {
-    // Para próximos confrontos (sem placar lançado), ordenar crescente
-    return list.filter(m => m.scheduled).reverse();
-  }
-  return list;
+const mapStanding = (s: any): Standing => ({
+  id: s.id,
+  championship: s.championship?.name || s.championship || '',
+  group: s.group ?? null,
+  position: s.position,
+  teamName: s.team?.name || 'Time',
+  logoUrl: s.team?.logoUrl || null,
+  points: s.points,
+  played: s.played,
+  won: s.won,
+  drawn: s.drawn,
+  lost: s.lost,
+  goalsFor: s.goalsFor ?? 0,
+  goalsAgainst: s.goalsAgainst ?? 0,
 });
 
-const championshipsList = computed(() => championships.value.map(c => c.name));
-
-const filteredStandings = computed(() => {
-  if (!selectedChampionship.value || selectedChampionship.value === 'friendly') {
-    return [];
+// Agrupa a classificação por grupo (para GRUPOS_MATA_MATA); sem grupo = tabela única
+const standingsGroups = computed(() => {
+  const map = new Map<string, Standing[]>();
+  for (const row of standings.value) {
+    const key = row.group || '';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(row);
   }
-  return standings.value.filter(s => s.championship === selectedChampionship.value);
+  return Array.from(map.entries()).map(([group, rows]) => ({ group, rows }));
 });
 
-// --- DATA FETCHING ---
-const loadData = async () => {
-  // Coleta competições (nome -> createdAt) vistas nas partidas e na classificação
-  const champMap = new Map<string, string>();
+const unwrap = (res: any): any[] => (Array.isArray(res) ? res : res?.data || []);
 
-  // 0. Carregar times para obter os logos
-  const teamLogoMap = new Map<string, string | null>();
+// --- DATA FETCHING (sob demanda, no servidor) ---
+
+// Só a lista de campeonatos para o seletor; define o padrão (mais recente).
+const loadChampionships = async () => {
   try {
-    const apiTeams = await request<any>('/teams');
-    const teamsList = Array.isArray(apiTeams) ? apiTeams : (apiTeams?.data || []);
-    teamsList.forEach((t: any) => {
-      if (t.name) {
-        teamLogoMap.set(t.name.toLowerCase(), t.logoUrl || null);
-      }
-    });
+    const res = await request<any>('/championships');
+    const list = unwrap(res);
+    championships.value = list
+      .map((c: any) => ({ id: c.id, name: c.name, createdAt: c.createdAt || '', format: c.format || 'PONTOS_CORRIDOS' }))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   } catch (error) {
-    console.warn('API /teams falhou ou indisponível.');
+    console.warn('API /championships indisponível.');
+    championships.value = [];
   }
 
-  // 1. Carregar partidas da API
+  // Seleção padrão: campeonato mais recente; se não houver, amistosos
+  selectedKey.value = championships.value.length > 0
+    ? String(championships.value[0].id)
+    : 'friendly';
+};
+
+// Busca partidas + classificação APENAS do que está selecionado, filtrando no servidor.
+const loadSelection = async () => {
+  const key = selectedKey.value;
+  if (!key) {
+    matches.value = [];
+    standings.value = [];
+    return;
+  }
+
+  const statusQuery =
+    selectedFilter.value === 'completed'
+      ? '&status=completed'
+      : selectedFilter.value === 'upcoming'
+        ? '&status=upcoming'
+        : '';
+
+  // Confrontos do clube da casa, já filtrados por campeonato/amistoso e status
   try {
-    const apiMatches = await request<any>('/matches');
-    let dynamicMatches: any[] = [];
-    
-    // Tratando envelopes comuns de paginação/resposta
-    if (Array.isArray(apiMatches)) {
-      dynamicMatches = apiMatches;
-    } else if (apiMatches && Array.isArray(apiMatches.data)) {
-      dynamicMatches = apiMatches.data;
-    }
-
-    dynamicMatches.forEach(m => {
-      const c = m.championship;
-      if (c && typeof c === 'object' && c.name) champMap.set(c.name, c.createdAt || '');
-    });
-
-    // Site público mostra apenas os confrontos do La Resenha
-    const ourMatches = dynamicMatches.filter(m =>
-      m.homeTeam?.isOwnClub || m.awayTeam?.isOwnClub || (!m.homeTeam && !m.awayTeam)
-    );
-
-    matches.value = ourMatches.map(m => {
-      const homeName: string = m.homeTeam?.name || 'La Resenha';
-      const awayName: string = m.awayTeam?.name || m.opponent || 'Adversário';
-      const scheduled = m.homeScore === null || m.homeScore === undefined;
-
-      // Resultado na perspectiva do La Resenha (independe de mando de campo)
-      let result: 'won' | 'lost' | 'drawn' | null = null;
-      if (!scheduled) {
-        const weAreHome = m.awayTeam?.isOwnClub ? false : true;
-        const ourScore = weAreHome ? m.homeScore : m.awayScore;
-        const theirScore = weAreHome ? m.awayScore : m.homeScore;
-        result = ourScore > theirScore ? 'won' : ourScore < theirScore ? 'lost' : 'drawn';
-      }
-
-      return {
-        id: m.id,
-        date: m.date,
-        location: m.location,
-        homeName,
-        awayName,
-        homeScore: m.homeScore ?? null,
-        awayScore: m.awayScore ?? null,
-        championship: m.championship?.name || m.championship || null,
-        homeLogo: m.homeTeam?.logoUrl || teamLogoMap.get(homeName.toLowerCase()) || null,
-        opponentLogo: m.awayTeam?.logoUrl || teamLogoMap.get(awayName.toLowerCase()) || null,
-        scheduled,
-        result
-      };
-    });
+    const scope = key === 'friendly' ? 'friendly=true' : `championshipId=${key}`;
+    const res = await request<any>(`/matches?ownClub=true&${scope}${statusQuery}`);
+    matches.value = unwrap(res).map(mapMatch);
   } catch (error) {
-    console.warn('API /matches falhou ou indisponível.');
+    console.warn('API /matches indisponível.');
     matches.value = [];
   }
 
-  // 2. Carregar classificação da API
-  try {
-    const apiStandings = await request<any>('/standings');
-    let dynamicStandings: any[] = [];
-    
-    if (Array.isArray(apiStandings)) {
-      dynamicStandings = apiStandings;
-    } else if (apiStandings && Array.isArray(apiStandings.data)) {
-      dynamicStandings = apiStandings.data;
-    }
-
-    // Mapear campos da API para correspondência ideal com a view
-    const mapped: Standing[] = dynamicStandings.map(s => {
-      const teamName = s.team?.name || s.teamName || s.team_name || (s.id === 1 ? 'La Resenha' : `Adversário ${s.id}`);
-      const logoUrl = s.team?.logoUrl || teamLogoMap.get(teamName.toLowerCase()) || null;
-      return {
-        id: s.id,
-        championship: s.championship?.name || s.championship || '',
-        position: s.position,
-        teamName,
-        logoUrl,
-        points: s.points,
-        played: s.played,
-        won: s.won,
-        drawn: s.drawn,
-        lost: s.lost,
-        goalsFor: s.goalsFor || s.goals_for || 0,
-        goalsAgainst: s.goalsAgainst || s.goals_against || 0
-      };
-    });
-
-    dynamicStandings.forEach(s => {
-      const c = s.championship;
-      if (c && typeof c === 'object' && c.name) champMap.set(c.name, c.createdAt || '');
-    });
-
-    mapped.sort((a, b) => a.position - b.position);
-    standings.value = mapped;
-  } catch (error) {
-    console.warn('API /standings falhou ou indisponível.');
+  // Classificação: só para campeonato real (amistoso não tem tabela)
+  if (key === 'friendly') {
     standings.value = [];
+  } else {
+    try {
+      const res = await request<any>(`/standings?championshipId=${key}`);
+      standings.value = unwrap(res).map(mapStanding).sort((a, b) => a.position - b.position);
+    } catch (error) {
+      console.warn('API /standings indisponível.');
+      standings.value = [];
+    }
   }
 
-  // 3. Montar lista de competições (mais recente primeiro) e selecionar a padrão
-  championships.value = Array.from(champMap.entries())
-    .map(([name, createdAt]) => ({ name, createdAt }))
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-
-  if (!selectedChampionship.value) {
-    if (championships.value.length > 0) {
-      selectedChampionship.value = championships.value[0].name;
-    } else if (hasFriendlies.value) {
-      selectedChampionship.value = 'friendly';
+  // Chaveamento: só para campeonatos de mata-mata
+  if (isKnockout.value) {
+    try {
+      const res = await request<any>(`/ties?championshipId=${key}`);
+      bracket.value = res?.data || res || { maxRound: 0, ties: [] };
+    } catch (error) {
+      bracket.value = { maxRound: 0, ties: [] };
     }
+  } else {
+    bracket.value = { maxRound: 0, ties: [] };
   }
 };
 
+// Trocar de campeonato ou de status refaz a busca no servidor
+watch([selectedKey, selectedFilter], () => {
+  loadSelection();
+});
+
 onMounted(async () => {
-  await loadData();
+  await loadChampionships(); // define selectedKey -> dispara o watch e busca os dados
 });
 </script>
 
 <style scoped>
 .resultados-page {
-  padding-top: 120px; /* Compensa o Header Fixo (80px) + espaço extra */
+  /* O header fixo (80px) já é compensado pelo padding-top do layout;
+     aqui só damos um respiro extra abaixo dele. */
+  padding-top: 40px;
   padding-bottom: 80px;
   min-height: 100vh;
 }
@@ -510,6 +522,15 @@ onMounted(async () => {
 /* ==========================================
    LAYOUT PRINCIPAL (GRID)
    ========================================== */
+.bracket-section {
+  margin-bottom: 48px;
+  padding: 24px;
+  background-color: var(--color-surface-container-low);
+  border: 4px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1);
+}
+
 .results-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -680,6 +701,19 @@ onMounted(async () => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-primary);
+}
+
+.match-card__phase {
+  color: var(--color-tertiary);
+}
+
+.match-card__penalties {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin-top: 2px;
 }
 
 .match-card__date {
@@ -915,6 +949,22 @@ onMounted(async () => {
 .championship-select:focus {
   border-color: var(--color-primary);
   outline: none;
+}
+
+.standings-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.standings-group__title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-tertiary);
+  margin: 0 0 8px 0;
+  letter-spacing: 0.03em;
 }
 
 .table-container {

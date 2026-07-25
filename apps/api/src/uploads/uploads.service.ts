@@ -50,7 +50,7 @@ export class UploadsService {
         stream.end(file.buffer);
       });
       return { url: result.secure_url };
-    } catch (error) {
+    } catch {
       throw new InternalServerErrorException('Falha ao enviar a imagem. Tente novamente.');
     }
   }

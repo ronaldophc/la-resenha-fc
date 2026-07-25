@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 export class LoginDto {
   @IsEmail({}, { message: 'O e-mail deve ser um endereço válido.' })
@@ -12,9 +12,18 @@ export class LoginDto {
 
   @IsString({ message: 'A senha deve ser uma string válida.' })
   @IsNotEmpty({ message: 'A senha é obrigatória.' })
-  @ApiProperty({ 
-    example: '123456', 
-    description: 'Senha do usuário cadastrado' 
+  @ApiProperty({
+    example: '123456',
+    description: 'Senha do usuário cadastrado'
   })
   password: string;
+
+  @ApiProperty({
+    example: true,
+    required: false,
+    description: 'Manter conectado (token com validade longa)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  rememberMe?: boolean;
 }

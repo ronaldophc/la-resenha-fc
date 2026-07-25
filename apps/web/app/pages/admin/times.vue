@@ -5,22 +5,13 @@
         <h1>Gerenciar Times</h1>
         <p class="page-subtitle">Cadastre e gerencie os times que participam dos campeonatos.</p>
       </div>
-      <VButton @click="toggleForm" variant="primary" class="new-team-btn">
-        {{ showForm ? 'Fechar Formulário ✖' : 'Novo Time 🛡️' }}
+      <VButton @click="openForm" variant="primary" class="new-team-btn">
+        Novo Time 🛡️
       </VButton>
     </div>
 
-    <!-- Alertas de Feedback -->
-    <div v-if="feedback" :class="['feedback-alert', `feedback-alert--${feedback.type}`]">
-      <span class="feedback-icon">{{ feedback.type === 'success' ? '✅' : '⚠️' }}</span>
-      <span class="feedback-message">{{ feedback.message }}</span>
-      <button @click="feedback = null" class="feedback-close">×</button>
-    </div>
-
     <!-- Formulário de Cadastro / Edição -->
-    <transition name="slide-fade">
-      <VCard v-if="showForm" class="team-form-card" variant="featured">
-        <h2 class="form-title">{{ isEditing ? 'Editar Time' : 'Cadastrar Novo Time' }}</h2>
+    <VModal v-model="showForm" :title="isEditing ? 'Editar Time' : 'Cadastrar Novo Time'">
         <form @submit.prevent="handleSubmit" class="team-form">
           <div class="form-grid">
             <div class="form-group">
@@ -48,8 +39,7 @@
             </VButton>
           </div>
         </form>
-      </VCard>
-    </transition>
+    </VModal>
 
     <!-- Lista de Times -->
     <VCard class="teams-list-card">
@@ -76,10 +66,10 @@
             <tr v-for="team in teams" :key="team.id">
               <td class="logo-cell">
                 <img 
-                  :src="team.logoUrl || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=100&auto=format&fit=crop'" 
+                  :src="team.logoUrl || PLACEHOLDER_TEAM"
                   :alt="team.name"
                   class="team-logo"
-                  @error="setDefaultLogo"
+                  @error="onImageError($event, PLACEHOLDER_TEAM)"
                 />
               </td>
               <td class="name-cell font-bold text-white">
@@ -107,8 +97,11 @@
 import { ref, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
+import { useFeedback } from '~/composables/useFeedback';
+import { onImageError, PLACEHOLDER_TEAM } from '~/utils/placeholders';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import VModal from '~/components/ui/VModal.vue';
 import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
@@ -140,18 +133,7 @@ const form = ref({
   logoUrl: ''
 });
 
-const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
-
-const showFeedback = (type: 'success' | 'error', message: string) => {
-  feedback.value = { type, message };
-  if (type === 'success') {
-    setTimeout(() => {
-      if (feedback.value?.message === message) {
-        feedback.value = null;
-      }
-    }, 5000);
-  }
-};
+const { showFeedback, getErrorMessage } = useFeedback();
 
 const loadTeams = async () => {
   loading.value = true;
@@ -166,11 +148,9 @@ const loadTeams = async () => {
   }
 };
 
-const toggleForm = () => {
-  showForm.value = !showForm.value;
-  if (!showForm.value) {
-    resetForm();
-  }
+const openForm = () => {
+  resetForm();
+  showForm.value = true;
 };
 
 const resetForm = () => {
@@ -200,7 +180,6 @@ const cancelEdit = () => {
 
 const handleSubmit = async () => {
   submitting.value = true;
-  feedback.value = null;
 
   try {
     const payload = {
@@ -227,9 +206,7 @@ const handleSubmit = async () => {
     await loadTeams();
   } catch (error: any) {
     console.error('Erro ao salvar time:', error);
-    const apiErrorMsg = error.data?.message;
-    const errorMsg = Array.isArray(apiErrorMsg) ? apiErrorMsg[0] : apiErrorMsg;
-    showFeedback('error', errorMsg || 'Erro ao salvar o time. Verifique se o nome já existe.');
+    showFeedback('error', getErrorMessage(error, 'Erro ao salvar o time. Verifique se o nome já existe.'));
   } finally {
     submitting.value = false;
   }
@@ -250,9 +227,6 @@ const confirmDelete = async (team: Team) => {
   }
 };
 
-const setDefaultLogo = (event: any) => {
-  event.target.src = 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=100&auto=format&fit=crop';
-};
 
 onMounted(() => {
   loadTeams();
@@ -300,42 +274,6 @@ onMounted(() => {
 .new-team-btn {
   font-size: 1.1rem;
   font-weight: 700;
-}
-
-.feedback-alert {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 3px solid var(--color-asphalt);
-  border-radius: var(--radius-sm);
-  box-shadow: 4px 4px 0px var(--color-asphalt);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  position: relative;
-}
-
-.feedback-alert--success {
-  background-color: var(--color-primary-container);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.feedback-alert--error {
-  background-color: #fdd8d8;
-  color: var(--color-error-red);
-  border-color: var(--color-error-red);
-}
-
-.feedback-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-left: auto;
-  color: inherit;
 }
 
 .team-form-card {
@@ -403,17 +341,6 @@ onMounted(() => {
   margin-top: 24px;
   border-top: 2px solid rgba(255, 255, 255, 0.05);
   padding-top: 16px;
-}
-
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.25s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
 }
 
 .teams-list-card {

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -35,4 +35,15 @@ export class CreateStandingDto {
   @IsInt({ message: 'O ajuste de pontos deve ser um número inteiro.' })
   @Type(() => Number)
   pointsAdjustment?: number;
+
+  @ApiProperty({
+    description: 'Grupo do time no campeonato (só em GRUPOS_MATA_MATA), ex: "A".',
+    example: 'A',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  groupName?: string | null;
 }

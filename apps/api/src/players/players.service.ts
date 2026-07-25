@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Player, PlayerPosition } from './interfaces/players.interface';
+import { Player } from './interfaces/players.interface';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { PlayerNumberAlreadyInUseException } from './exceptions/player-number-already-in-use.exception';
 import { PrismaService } from 'src/prisma/prisma.service';

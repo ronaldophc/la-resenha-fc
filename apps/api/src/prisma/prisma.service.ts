@@ -17,7 +17,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       try {
         await this.$connect();
         return;
-      } catch (error) {
+      } catch {
         this.logger.warn(
           `Falha ao conectar ao banco (tentativa ${attempt}/${maxAttempts}). ` +
             'Pode ser o Neon acordando. Nova tentativa em breve...',

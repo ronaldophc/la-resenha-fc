@@ -1,4 +1,4 @@
-import { IsString, IsInt, Min, IsNotEmpty, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsInt, Min, IsNotEmpty, IsOptional, IsDateString, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -84,4 +84,52 @@ export class CreateMatchDto {
   @IsInt({ message: 'O ID do campeonato deve ser um número inteiro.' })
   @Type(() => Number)
   championshipId?: number | null;
+
+  @ApiProperty({
+    description: 'Pênaltis do mandante (preencher só quando houve disputa)',
+    example: 4,
+    minimum: 0,
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt({ message: 'Os pênaltis do mandante devem ser um número inteiro.' })
+  @Min(0, { message: 'Os pênaltis do mandante não podem ser negativos.' })
+  @Type(() => Number)
+  homePenalties?: number | null;
+
+  @ApiProperty({
+    description: 'Pênaltis do visitante (preencher só quando houve disputa)',
+    example: 2,
+    minimum: 0,
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt({ message: 'Os pênaltis do visitante devem ser um número inteiro.' })
+  @Min(0, { message: 'Os pênaltis do visitante não podem ser negativos.' })
+  @Type(() => Number)
+  awayPenalties?: number | null;
+
+  @ApiProperty({
+    description: 'Fase do mata-mata (texto livre): "Final", "Semifinal", "Oitavas"...',
+    example: 'Semifinal',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString({ message: 'A fase deve ser um texto.' })
+  @MaxLength(60)
+  phase?: string | null;
+
+  @ApiProperty({
+    description: 'Grupo da fase de grupos (ex: "A"). Só em campeonatos com grupos.',
+    example: 'A',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString({ message: 'O grupo deve ser um texto.' })
+  @MaxLength(30)
+  groupName?: string | null;
 }
