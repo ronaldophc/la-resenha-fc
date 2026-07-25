@@ -3,21 +3,26 @@
     <!-- Top Admin Bar -->
     <header class="admin-topbar">
       <div class="admin-topbar-container">
-        <NuxtLink to="/" class="brand-link">
-          <img v-if="settings.logoUrl" :src="settings.logoUrl" :alt="settings.clubName" class="brand-logo" />
-          <span class="title">{{ settings.clubName }}</span>
-        </NuxtLink>
+        <div class="topbar-left">
+          <button class="sidebar-toggle" aria-label="Menu" @click="sidebarOpen = !sidebarOpen">
+            {{ sidebarOpen ? '✕' : '☰' }}
+          </button>
+          <NuxtLink to="/" class="brand-link">
+            <img v-if="settings.logoUrl" :src="settings.logoUrl" :alt="settings.clubName" class="brand-logo" />
+            <span class="title">{{ settings.clubName }}</span>
+          </NuxtLink>
+        </div>
 
         <div class="user-info" v-if="user">
           <VButton size="sm" variant="danger" @click="handleLogout">Sair</VButton>
         </div>
       </div>
     </header>
-    
+
     <div class="admin-body container">
       <!-- Admin Navigation Sidebar -->
-      <aside class="admin-sidebar">
-        <nav class="sidebar-nav">
+      <aside class="admin-sidebar" :class="{ 'admin-sidebar--open': sidebarOpen }">
+        <nav class="sidebar-nav" @click="sidebarOpen = false">
           <NuxtLink to="/admin" class="sidebar-item" exact-active-class="sidebar-active">
             🏠 Visão Geral
           </NuxtLink>
@@ -36,13 +41,16 @@
           <NuxtLink to="/admin/times" class="sidebar-item" active-class="sidebar-active">
             🛡️ Gerenciar Times
           </NuxtLink>
+          <NuxtLink to="/admin/patrocinadores" class="sidebar-item" active-class="sidebar-active">
+            🤝 Patrocinadores
+          </NuxtLink>
           <NuxtLink to="/admin/configuracoes" class="sidebar-item" active-class="sidebar-active">
             ⚙️ Configurações
           </NuxtLink>
           <div class="sidebar-separator"></div>
-          <NuxtLink to="/" class="sidebar-item sidebar-back-link">
-            ⬅️ Voltar ao Site
-          </NuxtLink>
+          <a href="/" target="_blank" rel="noopener" class="sidebar-item sidebar-back-link">
+            🔗 Ver o Site
+          </a>
         </nav>
       </aside>
       
@@ -55,13 +63,16 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuth } from '#imports';
 import { useSiteSettings } from '~/composables/useSiteSettings';
 import VButton from '~/components/ui/VButton.vue';
 
 const { user, logout } = useAuth();
 const { settings, load: loadSettings } = useSiteSettings();
+
+// Sidebar recolhível no mobile (no desktop fica sempre visível via CSS)
+const sidebarOpen = ref(false);
 
 const handleLogout = async () => {
   await logout();
@@ -105,11 +116,41 @@ onMounted(() => {
   }
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Botão de menu: só aparece no mobile */
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 2px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  color: var(--color-goal-white);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 .brand-link {
   display: flex;
   align-items: center;
   gap: 12px;
   text-decoration: none;
+  min-width: 0;
 }
 
 .brand-logo {
@@ -128,6 +169,17 @@ onMounted(() => {
   text-transform: uppercase;
   color: var(--color-goal-white);
   letter-spacing: 0.03em;
+  /* Nome longo não empurra o botão "Sair" nem quebra layout no mobile */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.15rem;
+  }
 }
 
 .user-info {
@@ -140,14 +192,22 @@ onMounted(() => {
   flex-grow: 1;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 32px;
-  padding: 32px var(--space-margin-mobile);
+  gap: 20px;
+  padding: 20px var(--space-margin-mobile);
 }
 
 @media (min-width: 1024px) {
   .admin-body {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
     padding: 32px var(--space-margin-desktop);
+  }
+  /* No desktop o sidebar fica sempre visível e o botão de menu some */
+  .admin-sidebar {
+    display: block !important;
+  }
+  .sidebar-toggle {
+    display: none;
   }
 }
 
@@ -156,24 +216,30 @@ onMounted(() => {
   border: var(--border-width-regular) solid var(--color-asphalt);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-hard-md);
-  padding: 20px;
+  padding: 12px;
   height: fit-content;
+  /* Mobile: recolhido por padrão; expande ao tocar no botão de menu */
+  display: none;
+}
+
+.admin-sidebar--open {
+  display: block;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .sidebar-item {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: var(--color-goal-white);
-  padding: 10px 14px;
+  padding: 7px 10px;
   border-radius: var(--radius-default);
   text-decoration: none;
   border: var(--border-width-regular) solid transparent;
@@ -195,7 +261,7 @@ onMounted(() => {
 .sidebar-separator {
   height: 2px;
   background-color: var(--color-asphalt);
-  margin: 12px 0;
+  margin: 8px 0;
 }
 
 .sidebar-back-link {

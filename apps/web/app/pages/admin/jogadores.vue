@@ -5,22 +5,13 @@
         <h1>Gerenciar Elenco</h1>
         <p class="page-subtitle">Adicione, edite ou remova atletas do La Resenha FC.</p>
       </div>
-      <VButton @click="toggleForm" variant="primary" class="new-player-btn">
-        {{ showForm ? 'Fechar Formulário ✖' : 'Novo Jogador 🏃' }}
+      <VButton @click="openForm" variant="primary" class="new-player-btn">
+        Novo Jogador 🏃
       </VButton>
     </div>
 
-    <!-- Alertas de Feedback -->
-    <div v-if="feedback" :class="['feedback-alert', `feedback-alert--${feedback.type}`]">
-      <span class="feedback-icon">{{ feedback.type === 'success' ? '✅' : '⚠️' }}</span>
-      <span class="feedback-message">{{ feedback.message }}</span>
-      <button @click="feedback = null" class="feedback-close">×</button>
-    </div>
-
     <!-- Formulário de Cadastro / Edição -->
-    <transition name="slide-fade">
-      <VCard v-if="showForm" class="player-form-card" variant="featured">
-        <h2 class="form-title">{{ isEditing ? 'Editar Atleta' : 'Cadastrar Novo Atleta' }}</h2>
+    <VModal v-model="showForm" :title="isEditing ? 'Editar Atleta' : 'Cadastrar Novo Atleta'">
         <form @submit.prevent="handleSubmit" class="player-form">
           <div class="form-grid">
             <div class="form-group">
@@ -72,8 +63,7 @@
             </VButton>
           </div>
         </form>
-      </VCard>
-    </transition>
+    </VModal>
 
     <!-- Lista de Jogadores -->
     <VCard class="players-list-card">
@@ -140,8 +130,10 @@
 import { ref, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useApi } from '~/composables/useApi';
+import { useFeedback } from '~/composables/useFeedback';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
+import VModal from '~/components/ui/VModal.vue';
 import ImageUpload from '~/components/ui/ImageUpload.vue';
 
 definePageMeta({
@@ -177,19 +169,7 @@ const form = ref({
   photoUrl: ''
 });
 
-const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null);
-
-const showFeedback = (type: 'success' | 'error', message: string) => {
-  feedback.value = { type, message };
-  // Auto-clear após 5 segundos se for sucesso
-  if (type === 'success') {
-    setTimeout(() => {
-      if (feedback.value?.message === message) {
-        feedback.value = null;
-      }
-    }, 5000);
-  }
-};
+const { showFeedback, getErrorMessage } = useFeedback();
 
 const loadPlayers = async () => {
   loading.value = true;
@@ -212,11 +192,9 @@ const loadPlayers = async () => {
   }
 };
 
-const toggleForm = () => {
-  showForm.value = !showForm.value;
-  if (!showForm.value) {
-    resetForm();
-  }
+const openForm = () => {
+  resetForm();
+  showForm.value = true;
 };
 
 const resetForm = () => {
@@ -261,7 +239,6 @@ const cancelEdit = () => {
 
 const handleSubmit = async () => {
   submitting.value = true;
-  feedback.value = null;
 
   try {
     const payload = {
@@ -290,12 +267,7 @@ const handleSubmit = async () => {
     await loadPlayers();
   } catch (error: any) {
     console.error('Erro ao salvar jogador:', error);
-    const apiErrorMsg = error.data?.message;
-    const errorMsg = Array.isArray(apiErrorMsg) ? apiErrorMsg[0] : apiErrorMsg;
-    showFeedback(
-      'error', 
-      errorMsg || 'Erro ao salvar atleta. Verifique se o número da camisa já está em uso.'
-    );
+    showFeedback('error', getErrorMessage(error, 'Erro ao salvar atleta. Verifique se o número da camisa já está em uso.'));
   } finally {
     submitting.value = false;
   }
@@ -365,42 +337,6 @@ onMounted(() => {
 }
 
 /* Alertas */
-.feedback-alert {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 3px solid var(--color-asphalt);
-  border-radius: var(--radius-sm);
-  box-shadow: 4px 4px 0px var(--color-asphalt);
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  position: relative;
-}
-
-.feedback-alert--success {
-  background-color: var(--color-primary-container);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.feedback-alert--error {
-  background-color: #fdd8d8;
-  color: var(--color-error-red);
-  border-color: var(--color-error-red);
-}
-
-.feedback-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: 700;
-  cursor: pointer;
-  margin-left: auto;
-  color: inherit;
-}
-
 /* Formulário */
 .player-form-card {
   border: 4px solid var(--color-primary) !important;
@@ -470,17 +406,6 @@ onMounted(() => {
 }
 
 /* Transições */
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.25s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
 /* Tabela de Jogadores */
 .players-list-card {
   padding: 0 !important;

@@ -27,7 +27,7 @@
       <header class="article-header">
         <div class="article-meta">
           <span class="category-badge">Novidades</span>
-          <span class="publish-date">📅 {{ formatDate(article.publishedAt) }}</span>
+          <span class="publish-date">📅 {{ formatDateLong(article.publishedAt) }}</span>
         </div>
         <h1 class="article-title">{{ article.title }}</h1>
       </header>
@@ -64,6 +64,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useHead } from '#imports';
 import { useApi } from '~/composables/useApi';
 import VButton from '~/components/ui/VButton.vue';
+import { formatDateLong } from '~/utils/formatters';
 
 interface Article {
   id: number;
@@ -119,18 +120,6 @@ const loadArticle = async () => {
   }
 };
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
 const formattedParagraphs = computed(() => {
   if (!article.value?.content) return [];
   // Divide por quebras de linha múltiplas ou parágrafos
@@ -160,6 +149,23 @@ onMounted(() => {
 .news-detail-page {
   max-width: 900px;
   margin: 0 auto;
+  /* padding real (as classes tailwind do template são no-op sem tailwind) */
+  padding: 32px 16px 64px;
+}
+
+/* Mídia colada no conteúdo (TinyMCE via v-html) não pode estourar no mobile.
+   Precisa de :deep pois v-html não recebe estilos scoped. */
+.article-content :deep(img),
+.article-content :deep(video),
+.article-content :deep(iframe),
+.article-content :deep(table) {
+  max-width: 100%;
+  height: auto;
+}
+
+.article-content :deep(table) {
+  display: block;
+  overflow-x: auto;
 }
 
 .back-navigation {

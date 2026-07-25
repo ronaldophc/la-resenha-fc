@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
@@ -30,12 +31,17 @@ describe('AuthService', () => {
     signAsync: jest.fn(),
   };
 
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue('8h'),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -77,11 +83,14 @@ describe('AuthService', () => {
 
       expect(usersService.findByEmailWithPassword).toHaveBeenCalledWith('admin@example.com');
       expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashed_password');
-      expect(jwtService.signAsync).toHaveBeenCalledWith({
-        sub: 1,
-        email: 'admin@example.com',
-        role: 'ADMIN',
-      });
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        {
+          sub: 1,
+          email: 'admin@example.com',
+          role: 'ADMIN',
+        },
+        { expiresIn: '8h' },
+      );
       expect(result).toEqual({
         accessToken: 'jwt_token',
         user: {
@@ -90,6 +99,19 @@ describe('AuthService', () => {
           role: 'ADMIN',
         },
       });
+    });
+
+    it('com "lembrar-me" emite token de validade longa (30 dias)', async () => {
+      mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockJwtService.signAsync.mockResolvedValue('jwt_token');
+
+      await service.login('admin@example.com', 'password123', true);
+
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        expect.any(Object),
+        { expiresIn: '30d' },
+      );
     });
 
     it('should throw UnauthorizedException if user not found', async () => {

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMatchDto } from './dto/create-match.dto';
+import { TiesService } from '../ties/ties.service';
 
 const MATCH_INCLUDE = {
   championship: true,
@@ -10,7 +11,10 @@ const MATCH_INCLUDE = {
 
 @Injectable()
 export class MatchesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly tiesService: TiesService,
+  ) {}
 
   async create(data: CreateMatchDto) {
     const { championship, homeTeam, awayTeam } = await this.validateRelations(data);
@@ -35,6 +39,10 @@ export class MatchesService {
         location: data.location,
         homeScore: data.homeScore ?? null,
         awayScore: data.awayScore ?? null,
+        homePenalties: data.homePenalties ?? null,
+        awayPenalties: data.awayPenalties ?? null,
+        phase: data.phase?.trim() || null,
+        groupName: data.groupName?.trim() || null,
         homeTeamId: homeTeam?.id ?? null,
         awayTeamId: awayTeam?.id ?? null,
         championshipId: championship?.id ?? null,
@@ -49,10 +57,52 @@ export class MatchesService {
     return match;
   }
 
-  async findAll() {
+  /**
+   * Lista partidas já filtradas no servidor. Os filtros são combináveis:
+   * - championshipId: só partidas do campeonato
+   * - ownClub=true: só partidas que envolvem o clube da casa (La Resenha)
+   * - status: 'upcoming' (agendadas, sem placar) | 'completed' (com placar)
+   */
+  async findAll(filters: {
+    championshipId?: number;
+    friendly?: boolean;
+    ownClub?: boolean;
+    status?: 'upcoming' | 'completed';
+  } = {}) {
+    const where: any = {};
+
+    if (filters.championshipId) {
+      where.championshipId = filters.championshipId;
+    } else if (filters.friendly) {
+      // Amistosos: partidas sem campeonato vinculado
+      where.championshipId = null;
+    }
+
+    if (filters.ownClub) {
+      where.OR = [
+        { homeTeam: { isOwnClub: true } },
+        { awayTeam: { isOwnClub: true } },
+        // Amistosos legados sem times cadastrados (perspectiva do clube)
+        { AND: [{ homeTeamId: null }, { awayTeamId: null }] },
+      ];
+    }
+
+    if (filters.status === 'upcoming') {
+      where.homeScore = null;
+    } else if (filters.status === 'completed') {
+      where.homeScore = { not: null };
+    }
+
+    // Agendadas em ordem crescente (próximas primeiro); realizadas, decrescente
+    const orderBy =
+      filters.status === 'upcoming'
+        ? { date: 'asc' as const }
+        : { date: 'desc' as const };
+
     return this.prisma.match.findMany({
+      where,
       include: MATCH_INCLUDE,
-      orderBy: { date: 'desc' },
+      orderBy,
     });
   }
 
@@ -70,7 +120,7 @@ export class MatchesService {
   async update(id: number, data: Partial<CreateMatchDto>) {
     const current = await this.findOne(id);
 
-    const { championship, homeTeam, awayTeam } = await this.validateRelations(data);
+    const { homeTeam, awayTeam } = await this.validateRelations(data);
 
     // Estado final após o merge (undefined = não alterado; null = limpar)
     const finalChampionshipId =
@@ -103,6 +153,10 @@ export class MatchesService {
     if (data.championshipId !== undefined) updateData.championshipId = data.championshipId ?? null;
     if (data.homeTeamId !== undefined) updateData.homeTeamId = data.homeTeamId ?? null;
     if (data.awayTeamId !== undefined) updateData.awayTeamId = data.awayTeamId ?? null;
+    if (data.homePenalties !== undefined) updateData.homePenalties = data.homePenalties;
+    if (data.awayPenalties !== undefined) updateData.awayPenalties = data.awayPenalties;
+    if (data.phase !== undefined) updateData.phase = data.phase?.trim() || null;
+    if (data.groupName !== undefined) updateData.groupName = data.groupName?.trim() || null;
 
     // Mantém o campo textual legado coerente com os times informados
     if (data.opponent !== undefined || data.homeTeamId !== undefined || data.awayTeamId !== undefined) {
@@ -125,14 +179,22 @@ export class MatchesService {
       await this.autoEnroll(finalChampionshipId, [finalHomeTeamId, finalAwayTeamId]);
     }
 
+    // Se a partida faz parte de um chaveamento, recalcula o avanço
+    if (current.tieId && current.championshipId) {
+      await this.tiesService.recompute(current.championshipId);
+    }
+
     return match;
   }
 
   async remove(id: number): Promise<void> {
-    await this.findOne(id);
+    const match = await this.findOne(id);
     await this.prisma.match.delete({
       where: { id },
     });
+    if (match.tieId && match.championshipId) {
+      await this.tiesService.recompute(match.championshipId);
+    }
   }
 
   /** Valida existência de campeonato e times informados no payload. */

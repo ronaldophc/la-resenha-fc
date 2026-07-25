@@ -168,7 +168,8 @@ onMounted(async () => {
 <style scoped>
 .elenco-page {
   width: 100%;
-  padding-top: 96px; /* pt-24 = 96px */
+  /* Header fixo (80px) já compensado pelo layout; só o respiro extra aqui. */
+  padding-top: 32px;
   padding-bottom: 80px; /* pb-20 = 80px */
   min-height: 100vh;
 }

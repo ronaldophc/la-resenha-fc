@@ -48,6 +48,7 @@ export class StandingsService {
         championshipId: createStandingDto.championshipId,
         teamId: createStandingDto.teamId,
         pointsAdjustment: createStandingDto.pointsAdjustment ?? 0,
+        groupName: createStandingDto.groupName?.trim() || null,
       },
       include: {
         championship: true,
@@ -86,6 +87,7 @@ export class StandingsService {
 
   private async computeTableForChampionship(championship: {
     id: number;
+    format?: string;
     pointsPerWin: number;
     pointsPerDraw: number;
     pointsPerLoss: number;
@@ -109,6 +111,35 @@ export class StandingsService {
 
     if (enrollments.length === 0) return [];
 
+    const format = championship.format || 'PONTOS_CORRIDOS';
+
+    // Mata-mata puro não tem tabela de classificação (só chaveamento)
+    if (format === 'MATA_MATA') return [];
+
+    // Grupos + mata-mata: uma tabela por grupo, contando só os jogos daquele grupo
+    if (format === 'GRUPOS_MATA_MATA') {
+      const groups = Array.from(
+        new Set(enrollments.map((e) => e.groupName).filter((g): g is string => !!g)),
+      ).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+      return groups.flatMap((group) => {
+        const groupEnrollments = enrollments.filter((e) => e.groupName === group);
+        const groupMatches = matches.filter((m) => m.groupName === group);
+        return this.buildRows(championship, groupEnrollments, groupMatches, group);
+      });
+    }
+
+    // Pontos corridos: tabela única com todos os jogos (ignora grupo/fase)
+    return this.buildRows(championship, enrollments, matches, null);
+  }
+
+  /** Roda a calculadora para um conjunto de times/jogos e mapeia para o formato da view. */
+  private buildRows(
+    championship: { id: number; pointsPerWin: number; pointsPerDraw: number; pointsPerLoss: number; tiebreakers: string[] },
+    enrollments: any[],
+    matches: any[],
+    group: string | null,
+  ) {
     const rows = computeStandings(
       {
         pointsPerWin: championship.pointsPerWin,
@@ -129,8 +160,6 @@ export class StandingsService {
       })),
     );
 
-    // Junta a linha calculada com os dados da inscrição (mesmo formato do
-    // antigo registro armazenado, para compatibilidade do front)
     const byTeamId = new Map(enrollments.map((e) => [e.teamId, e]));
     return rows.map((row) => {
       const enrollment = byTeamId.get(row.teamId)!;
@@ -138,6 +167,7 @@ export class StandingsService {
         id: enrollment.id,
         championshipId: championship.id,
         teamId: row.teamId,
+        group,
         position: row.position,
         points: row.points,
         played: row.played,
@@ -171,7 +201,7 @@ export class StandingsService {
     return standing;
   }
 
-  /** Atualiza a inscrição (apenas o ajuste manual de pontos). */
+  /** Atualiza a inscrição (ajuste manual de pontos e/ou grupo). */
   async update(id: number, updateStandingDto: UpdateStandingDto) {
     await this.findOne(id);
 
@@ -179,6 +209,10 @@ export class StandingsService {
       where: { id },
       data: {
         pointsAdjustment: updateStandingDto.pointsAdjustment,
+        groupName:
+          updateStandingDto.groupName !== undefined
+            ? (updateStandingDto.groupName?.trim() || null)
+            : undefined,
       },
       include: {
         championship: true,

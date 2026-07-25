@@ -30,6 +30,29 @@ export class CreateChampionshipDto {
   logoUrl?: string;
 
   @ApiProperty({
+    description: 'Formato do campeonato',
+    enum: ['PONTOS_CORRIDOS', 'MATA_MATA', 'GRUPOS_MATA_MATA'],
+    default: 'PONTOS_CORRIDOS',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['PONTOS_CORRIDOS', 'MATA_MATA', 'GRUPOS_MATA_MATA'], {
+    message: 'Formato inválido. Use PONTOS_CORRIDOS, MATA_MATA ou GRUPOS_MATA_MATA.',
+  })
+  format?: string;
+
+  @ApiProperty({
+    description: 'Mata-mata: 1 = jogo único, 2 = ida e volta',
+    enum: [1, 2],
+    default: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsIn([1, 2], { message: 'Ida/volta deve ser 1 (jogo único) ou 2 (ida e volta).' })
+  @Type(() => Number)
+  knockoutLegs?: number;
+
+  @ApiProperty({
     description: 'Pontos por vitória',
     example: 3,
     default: 3,

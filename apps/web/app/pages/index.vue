@@ -174,6 +174,31 @@
       </div>
     </section>
 
+    <!-- Tarja de Patrocinadores (só aparece se houver patrocinadores) -->
+    <section v-if="sponsors.length > 0" class="sponsors-strip">
+      <div class="sponsors-strip__header">
+        <span class="sponsors-strip__label">Patrocinadores</span>
+        <NuxtLink to="/patrocinadores" class="sponsors-strip__link">Ver todos →</NuxtLink>
+      </div>
+      <div class="sponsors-strip__track">
+        <NuxtLink
+          v-for="sponsor in sponsors"
+          :key="sponsor.id"
+          to="/patrocinadores"
+          class="sponsors-strip__item"
+          :title="sponsor.name"
+        >
+          <img
+            v-if="sponsor.logoUrl"
+            :src="sponsor.logoUrl"
+            :alt="sponsor.name"
+            class="sponsors-strip__logo"
+          />
+          <span v-else class="sponsors-strip__name">{{ sponsor.name }}</span>
+        </NuxtLink>
+      </div>
+    </section>
+
   </div>
 </template>
 
@@ -202,6 +227,8 @@ const nextMatch = ref<{
 } | null>(null);
 
 const teams = ref<any[]>([]);
+
+const sponsors = ref<Array<{ id: number; name: string; logoUrl?: string | null }>>([]);
 
 const newsList = ref<Array<{
   id: number | string;
@@ -300,27 +327,19 @@ const loadApiData = async () => {
   }
 
   try {
-    const matchesResponse = await request<any>('/matches');
-    const matchesList = Array.isArray(matchesResponse) ? matchesResponse : (matchesResponse?.data || []);
-    
-    if (matchesList.length > 0) {
-      // Considera apenas confrontos do La Resenha (partidas de outros times não aparecem aqui)
-      const ourMatches = matchesList.filter((m: any) =>
-        m.homeTeam?.isOwnClub || m.awayTeam?.isOwnClub || (!m.homeTeam && !m.awayTeam)
-      );
-      const sorted = [...ourMatches].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      const now = new Date();
-      const future = sorted.find(m => new Date(m.date) > now);
-      if (future) {
-        nextMatch.value = {
-          opponent: future.opponent,
-          location: future.location,
-          date: future.date,
-          championship: future.championship?.name || future.championship || 'Amistoso Especial'
-        };
-      } else {
-        nextMatch.value = null;
-      }
+    // Pede ao servidor só os confrontos agendados do clube, já ordenados (próximos primeiro)
+    const matchesResponse = await request<any>('/matches?ownClub=true&status=upcoming');
+    const upcoming = Array.isArray(matchesResponse) ? matchesResponse : (matchesResponse?.data || []);
+    const future = upcoming[0];
+    if (future) {
+      nextMatch.value = {
+        opponent: future.awayTeam?.isOwnClub
+          ? (future.homeTeam?.name || future.opponent)
+          : (future.awayTeam?.name || future.opponent),
+        location: future.location,
+        date: future.date,
+        championship: future.championship?.name || future.championship || 'Amistoso Especial'
+      };
     } else {
       nextMatch.value = null;
     }
@@ -347,6 +366,14 @@ const loadApiData = async () => {
   } catch (error) {
     console.warn('API /news indisponível.');
     newsList.value = [];
+  }
+
+  try {
+    const sponsorsResponse = await request<any>('/sponsors');
+    sponsors.value = Array.isArray(sponsorsResponse) ? sponsorsResponse : (sponsorsResponse?.data || []);
+  } catch (error) {
+    console.warn('API /sponsors indisponível.');
+    sponsors.value = [];
   }
 };
 
@@ -903,6 +930,94 @@ onMounted(async () => {
 .social-btn:hover {
   box-shadow: none;
   transform: translate(4px, 4px);
+}
+
+/* ==========================================
+   TARJA DE PATROCINADORES
+   ========================================== */
+.sponsors-strip {
+  width: 100%;
+  padding: 32px var(--space-margin-mobile);
+  background-color: var(--color-surface-container-lowest);
+  border-top: 4px solid var(--color-outline-variant);
+  border-bottom: 4px solid var(--color-outline-variant);
+}
+
+@media (min-width: 768px) {
+  .sponsors-strip {
+    padding: 32px var(--space-margin-desktop);
+  }
+}
+
+.sponsors-strip__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sponsors-strip__label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-on-surface-variant);
+}
+
+.sponsors-strip__link {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.sponsors-strip__link:hover {
+  text-decoration: underline;
+}
+
+.sponsors-strip__track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.sponsors-strip__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+  min-width: 120px;
+  padding: 12px 20px;
+  background-color: #fff;
+  border: 3px solid var(--color-asphalt);
+  border-radius: var(--radius-sm);
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 1);
+  text-decoration: none;
+  transition: all 0.12s ease;
+}
+
+.sponsors-strip__item:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 1);
+}
+
+.sponsors-strip__logo {
+  max-height: 56px;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.sponsors-strip__name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-asphalt);
 }
 
 /* ==========================================

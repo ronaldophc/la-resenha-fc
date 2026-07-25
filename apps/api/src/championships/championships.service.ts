@@ -23,6 +23,8 @@ export class ChampionshipsService {
       data: {
         name: data.name,
         logoUrl: data.logoUrl ?? null,
+        format: data.format ?? 'PONTOS_CORRIDOS',
+        knockoutLegs: data.knockoutLegs ?? 1,
         pointsPerWin: data.pointsPerWin ?? 3,
         pointsPerDraw: data.pointsPerDraw ?? 1,
         pointsPerLoss: data.pointsPerLoss ?? 0,
@@ -70,6 +72,8 @@ export class ChampionshipsService {
       data: {
         name: data.name,
         logoUrl: data.logoUrl !== undefined ? (data.logoUrl ?? null) : undefined,
+        format: data.format,
+        knockoutLegs: data.knockoutLegs,
         pointsPerWin: data.pointsPerWin,
         pointsPerDraw: data.pointsPerDraw,
         pointsPerLoss: data.pointsPerLoss,

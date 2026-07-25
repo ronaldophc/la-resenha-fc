@@ -3,6 +3,7 @@ import { MatchesService } from './matches.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateMatchDto } from './dto/create-match.dto';
+import { TiesService } from '../ties/ties.service';
 
 const MATCH_INCLUDE = {
   championship: true,
@@ -50,11 +51,14 @@ describe('MatchesService', () => {
     },
   };
 
+  const mockTiesService = { recompute: jest.fn() };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MatchesService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: TiesService, useValue: mockTiesService },
       ],
     }).compile();
 
@@ -91,6 +95,10 @@ describe('MatchesService', () => {
           location: dto.location,
           homeScore: 2,
           awayScore: 1,
+          homePenalties: null,
+          awayPenalties: null,
+          phase: null,
+          groupName: null,
           homeTeamId: null,
           awayTeamId: null,
           championshipId: null,
@@ -199,16 +207,60 @@ describe('MatchesService', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of matches ordered by date desc', async () => {
+    it('sem filtros retorna todas ordenadas por data desc', async () => {
       mockPrismaService.match.findMany.mockResolvedValue([mockMatch]);
 
       const result = await service.findAll();
 
       expect(prisma.match.findMany).toHaveBeenCalledWith({
+        where: {},
         include: MATCH_INCLUDE,
         orderBy: { date: 'desc' },
       });
       expect(result).toEqual([mockMatch]);
+    });
+
+    it('filtra por campeonato', async () => {
+      mockPrismaService.match.findMany.mockResolvedValue([]);
+
+      await service.findAll({ championshipId: 5 });
+
+      expect(prisma.match.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { championshipId: 5 } }),
+      );
+    });
+
+    it('filtra por clube da casa (ownClub)', async () => {
+      mockPrismaService.match.findMany.mockResolvedValue([]);
+
+      await service.findAll({ ownClub: true });
+
+      const call = mockPrismaService.match.findMany.mock.calls[0][0];
+      expect(call.where.OR).toEqual([
+        { homeTeam: { isOwnClub: true } },
+        { awayTeam: { isOwnClub: true } },
+        { AND: [{ homeTeamId: null }, { awayTeamId: null }] },
+      ]);
+    });
+
+    it('status=upcoming filtra sem placar e ordena crescente', async () => {
+      mockPrismaService.match.findMany.mockResolvedValue([]);
+
+      await service.findAll({ status: 'upcoming' });
+
+      expect(prisma.match.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { homeScore: null }, orderBy: { date: 'asc' } }),
+      );
+    });
+
+    it('status=completed filtra com placar', async () => {
+      mockPrismaService.match.findMany.mockResolvedValue([]);
+
+      await service.findAll({ status: 'completed' });
+
+      expect(prisma.match.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { homeScore: { not: null } }, orderBy: { date: 'desc' } }),
+      );
     });
   });
 

@@ -2,8 +2,10 @@
   <div class="login-container">
     <VCard variant="featured" class="login-card">
       <div class="login-header">
-        <h1>ÁREA RESTRITA</h1>
-        <p>Identifique-se para acessar o painel administrativo.</p>
+        <div class="login-brand">
+          <img v-if="settings.logoUrl" :src="settings.logoUrl" :alt="settings.clubName" class="login-logo" />
+          <span class="login-club">{{ settings.clubName }}</span>
+        </div>
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
@@ -31,11 +33,16 @@
           />
         </div>
 
+        <label class="remember-row">
+          <input type="checkbox" v-model="rememberMe" class="remember-check" />
+          <span>Lembrar de mim (manter conectado)</span>
+        </label>
+
         <div v-if="errorMessage" class="error-banner">
           {{ errorMessage }}
         </div>
 
-        <VButton 
+        <VButton
           type="submit" 
           variant="primary" 
           :disabled="loading"
@@ -53,9 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useHead, definePageMeta } from '#imports';
 import { useAuth } from '~/composables/useAuth';
+import { useSiteSettings } from '~/composables/useSiteSettings';
 import VCard from '~/components/ui/VCard.vue';
 import VButton from '~/components/ui/VButton.vue';
 
@@ -70,10 +78,18 @@ useHead({
 });
 
 const { login } = useAuth();
+const { settings, load: loadSettings } = useSiteSettings();
+
+// "Lembrar de mim": mantém o cookie de autenticação persistente (~30 dias)
+const rememberMe = ref(false);
 
 const form = reactive({
   email: '',
   password: ''
+});
+
+onMounted(() => {
+  loadSettings();
 });
 
 const loading = ref(false);
@@ -85,7 +101,8 @@ const handleLogin = async () => {
 
   const result = await login({
     email: form.email,
-    password: form.password
+    password: form.password,
+    rememberMe: rememberMe.value
   });
 
   loading.value = false;
@@ -116,14 +133,30 @@ const handleLogin = async () => {
   margin-bottom: 32px;
 }
 
-.login-header h1 {
-  font-size: 2.5rem;
-  margin-bottom: 8px;
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-.login-header p {
-  color: var(--color-goal-white);
-  font-size: 1rem;
+.login-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 3px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-low);
+}
+
+.login-club {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--color-tertiary);
+  line-height: 1.1;
 }
 
 .login-form {
@@ -161,6 +194,25 @@ const handleLogin = async () => {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 4px 4px 0px var(--color-primary);
+}
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-goal-white);
+  cursor: pointer;
+  user-select: none;
+}
+
+.remember-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
 }
 
 .error-banner {

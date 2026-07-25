@@ -6,7 +6,6 @@ describe('AuthController', () => {
   let controller: AuthController;
 
   const mockAuthService = {
-    register: jest.fn(),
     login: jest.fn(),
   };
 
